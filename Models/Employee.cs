@@ -20,18 +20,6 @@ namespace NoSQL_Project.Models
         [BsonRepresentation(BsonType.String)]
         public RoleType Role { get; set; }
 
-        [BsonElement("Email")]
-        public string Email { get; set; }
-
-        [BsonElement("Phone")]
-        public string Phone { get; set; }
-
-        [BsonElement("Location")]
-        public string Location { get; set; }
-
-        [BsonElement("Password")]
-        public string Password { get; set; }
-
         [BsonElement("contactInfo")]
         public ContactInfo ContactInfo { get; set; }
 

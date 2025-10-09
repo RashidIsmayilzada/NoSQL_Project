@@ -6,7 +6,7 @@ namespace NoSQL_Project.Controllers
 {
     public class EmployeeController : Controller
     {
-        private IEmployeeService _employeeService;
+        private readonly IEmployeeService _employeeService;
         public EmployeeController(IEmployeeService employeeService)
         {
             _employeeService = employeeService;
