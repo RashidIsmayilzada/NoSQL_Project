@@ -6,54 +6,64 @@ using NoSQL_Project.Models.Enums;
 
 namespace NoSQL_Project.Models
 {
+    [BsonIgnoreExtraElements]
     public class Employee
     {
-            [BsonId]
-            [BsonRepresentation(BsonType.ObjectId)]
-            public string Id { get; set; }
+        [BsonId]
+        [BsonRepresentation(BsonType.ObjectId)]
+        public string Id { get; set; }
 
-            [BsonElement("Name")]
-            public Name Name { get; set; }
+        [BsonElement("Name")]
+        public Name Name { get; set; }
 
-            [BsonRepresentation(BsonType.String)]
-            public RoleType Role { get; set; }
+        [BsonElement("Role")]
+        [BsonRepresentation(BsonType.String)]
+        public RoleType Role { get; set; }
 
-            [BsonElement("Email")]
-            public string Email { get; set; }
+        [BsonElement("Email")]
+        public string Email { get; set; }
 
-            [BsonElement("Phone")]
-            public string Phone { get; set; }
+        [BsonElement("Phone")]
+        public string Phone { get; set; }
 
-            [BsonElement("Location")]
-            public string Location { get; set; }
+        [BsonElement("Location")]
+        public string Location { get; set; }
 
-            [BsonElement("Password")]
-            public string Password { get; set; }
+        [BsonElement("Password")]
+        public string Password { get; set; }
 
-            [BsonElement("contactInfo")]
-            public ContactInfo ContactInfo { get; set; }
+        [BsonElement("contactInfo")]
+        public ContactInfo ContactInfo { get; set; }
 
-        }
+        [BsonIgnore]
+        public List<Ticket> ReportedTickets { get; set; } = new();
 
-        public class Name
+        public Employee()
         {
-            [BsonElement("FirstName")]
-            public string FirstName { get; set; }
-
-            [BsonElement("LastName")]
-            public string LastName { get; set; }
+            ReportedTickets = new List<Ticket>();
         }
 
-        public class ContactInfo
-        {
-            [BsonElement("Email")]
-            public string Email { get; set; }
+    }
 
-            [BsonElement("Phone")]
-            public string Phone { get; set; }
+    public class Name
+    {
+        [BsonElement("FirstName")]
+        public string FirstName { get; set; } = "";
 
-            [BsonElement("Location")]
-            public string Location { get; set; }
-        }
+        [BsonElement("LastName")]
+        public string LastName { get; set; } = "";
+    }
+
+    public class ContactInfo
+    {
+        [BsonElement("Email")]
+        public string Email { get; set; } = "";
+
+        [BsonElement("Phone")]
+        public string Phone { get; set; } = "";
+
+        [BsonElement("Location")]
+        public string Location { get; set; } = "";
+    }
 
 }

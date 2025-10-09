@@ -2,7 +2,7 @@
 {
     public enum RoleType
     {
-        Employee,
-        Service_Desk_Employee
+        Regular,
+        ServiceDesk
     }
 }
