@@ -1,20 +1,64 @@
-﻿@model List<Employee>
+﻿@model IEnumerable<Employee>
+
 @{
+    ViewData["Title"] = "Employee List";
 }
 
-<h1>Users</h1>
+<h1>Employees</h1>
 
-<table>
+<p>
+    <a class="btn btn-primary" asp-action="Create">Create New</a>
+</p>
+<div class="table-responsive border border-dark rounded-3 p-1 mh-75 overfl">
+<table class="table table-responsive">
     <thead>
-        <tr><th>Name</th><th>Email</th></tr>
+        <tr class="text-primary">
+                <th>
+                    @Html.DisplayNameFor(model => model.EmployeeId)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.ContactInfo.Email)
+                </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Name.FirstName)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Name.LastName)
+            </th>
+              <th>
+                    @Html.DisplayNameFor(model => model.Role)
+             </th>
+             <th>
+                 #Tickets
+             </th>
+            <th>Actions</th>
+        </tr>
     </thead>
     <tbody>
-        @foreach (var u in Model)
-        {
-            <tr>
-                <td>@u.Name.FirstName</td>
-                <td>@u.ContactInfo.Email</td>
-            </tr>
-        }
+@foreach (var item in Model) {
+        <tr>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.EmployeeId)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.ContactInfo.Email)
+                    </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Name.FirstName)
+            </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.Name.LastName)
+                    </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Role)
+            </td>
+                    <td>@item.ReportedTickets.Count</td>
+            <td>
+                <a class="btn btn-warning btn-sm" href="@Url.Action("Edit", "Employee", new { /*id = item.Id*/ })">Edit</a>
+                        <a class="btn btn-danger btn-sm" href="@Url.Action("Delete", "Employee", new { /*id = item.Id*/ })">Delete</a>
+            </td>
+        </tr>
+}
     </tbody>
 </table>
+</div>

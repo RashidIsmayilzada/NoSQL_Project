@@ -13,6 +13,9 @@ namespace NoSQL_Project.Models
         [BsonRepresentation(BsonType.ObjectId)]
         public string? Id { get; set; }
 
+        [BsonElement("EmployeeId")]
+        public string EmployeeId { get; set; } = "";
+
         [BsonElement("Name")]
         public Name Name { get; set; }
 
@@ -31,7 +34,7 @@ namespace NoSQL_Project.Models
         {
             ReportedTickets = new List<Ticket>();
         }
-        
+
     }
 
     public class Name
