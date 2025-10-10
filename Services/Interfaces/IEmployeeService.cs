@@ -4,6 +4,13 @@ namespace NoSQL_Project.Services.Interfaces
 {
     public interface IEmployeeService
     {
-        List<Employee> GetAllEmployees();
+        Task<List<Employee>> GetAllEmployeesAsync();
+        Task<List<Employee>> GetEmployeesWithTicketAsync();
+        Task<Employee> GetEmployeeByIdAsync(string? id);
+        Task CreateEmployeeAsync(Employee employee);
+        Task UpdateEmployeeAsync(Employee employee);
+        Task DeleteEmployeeAsync(string? id);
+        
+         
     }
 }

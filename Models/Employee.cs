@@ -11,7 +11,7 @@ namespace NoSQL_Project.Models
     {
         [BsonId]
         [BsonRepresentation(BsonType.ObjectId)]
-        public string Id { get; set; }
+        public string? Id { get; set; }
 
         [BsonElement("Name")]
         public Name Name { get; set; }
@@ -23,14 +23,15 @@ namespace NoSQL_Project.Models
         [BsonElement("contactInfo")]
         public ContactInfo ContactInfo { get; set; }
 
-        [BsonIgnore]
+        [BsonElement("ReportedTickets")]
+        [BsonIgnoreIfNull]
         public List<Ticket> ReportedTickets { get; set; } = new();
 
         public Employee()
         {
             ReportedTickets = new List<Ticket>();
         }
-
+        
     }
 
     public class Name
