@@ -5,6 +5,7 @@ namespace NoSQL_Project.Services.Interfaces
     public interface IEmployeeService
     {
         Task<List<Employee>> GetAllEmployeesAsync();
+        Task<List<Employee>> GetEmployeesWithTicketAsync();
         Task<Employee> GetEmployeeByIdAsync(string? id);
         Task CreateEmployeeAsync(Employee employee);
         Task UpdateEmployeeAsync(Employee employee);

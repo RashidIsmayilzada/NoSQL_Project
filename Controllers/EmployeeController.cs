@@ -32,6 +32,14 @@ namespace NoSQL_Project.Controllers
 
             return Ok(employee);
         }
+        
+        // GET: /Employee/EmployeesWithTickets
+        [HttpGet]
+        public async Task<IActionResult> EmployeesWithTickets()
+        {
+            List<Employee> employees = await _employeeService.GetEmployeesWithTicketAsync();
+            return Ok(employees);
+        }
 
         // GET: /Employee/Create
         [HttpGet]

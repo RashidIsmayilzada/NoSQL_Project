@@ -23,7 +23,8 @@ namespace NoSQL_Project.Models
         [BsonElement("contactInfo")]
         public ContactInfo ContactInfo { get; set; }
 
-        [BsonIgnore]
+        [BsonElement("ReportedTickets")]
+        [BsonIgnoreIfNull]
         public List<Ticket> ReportedTickets { get; set; } = new();
 
         public Employee()

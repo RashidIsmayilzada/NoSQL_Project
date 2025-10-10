@@ -35,5 +35,10 @@ namespace NoSQL_Project.Services
         {
             await _employeeRepository.DeleteEmployee(id);
         }
+        
+        public async Task<List<Employee>> GetEmployeesWithTicketAsync()
+        {
+            return await _employeeRepository.GetEmployeesWithTicket();
+        }
     }
 }
