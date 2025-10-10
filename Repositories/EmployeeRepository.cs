@@ -26,7 +26,7 @@ namespace NoSQL_Project.Repositories
             {
                 new BsonDocument("$lookup", new BsonDocument
                 {
-                    { "from", "Tickets" },
+                    { "from", "Ticket" },
                     { "localField", "_id" },
                     { "foreignField", "ReportedBy" },
                     { "as", "ReportedTickets" }

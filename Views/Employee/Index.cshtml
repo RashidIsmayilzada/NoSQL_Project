@@ -9,8 +9,8 @@
 <p>
     <a class="btn btn-primary" asp-action="Create">Create New</a>
 </p>
-<div class="table-responsive border border-dark rounded-3 p-1 mh-75 overfl">
-<table class="table table-responsive">
+<div class="table-responsive border border-dark rounded-3 p-1">
+<table class="table">
     <thead>
         <tr class="text-primary">
                 <th>
@@ -54,8 +54,8 @@
             </td>
                     <td>@item.ReportedTickets.Count</td>
             <td>
-                <a class="btn btn-warning btn-sm" href="@Url.Action("Edit", "Employee", new { /*id = item.Id*/ })">Edit</a>
-                        <a class="btn btn-danger btn-sm" href="@Url.Action("Delete", "Employee", new { /*id = item.Id*/ })">Delete</a>
+                <a class="btn btn-warning btn-sm" href="@Url.Action("Update", "Employee", new { id = item.Id })">Edit</a>
+                        <a class="btn btn-danger btn-sm" href="@Url.Action("Delete", "Employee", new { id = item.Id })">Delete</a>
             </td>
         </tr>
 }

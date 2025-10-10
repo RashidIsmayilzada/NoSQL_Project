@@ -1,0 +1,69 @@
+﻿@using NoSQL_Project.Models.Enums
+@model NoSQL_Project.Models.Employee
+
+@{
+    ViewData["Title"] = "Update";
+}
+<div>
+    <a class="btn btn-secondary mb-3" asp-action="Index">Back to List</a>
+</div>
+<div class="d-flex flex-column">
+<h1>Update Employee</h1>
+<div class="border border-dark rounded-3 p-1">
+    <div class="col-md-4">
+        <form asp-action="Update" class="d-flex flex-column gap-2">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div class="form-group">
+                <input asp-for="Id" class="form-control" hidden/>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="EmployeeId" class="control-label"></label>
+                <input asp-for="EmployeeId" class="form-control" />
+                <span asp-validation-for="EmployeeId" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+            <label asp-for="Name.FirstName" class="control-label"></label>
+            <input asp-for="Name.FirstName" class="form-control" />
+            <span asp-validation-for="Name.FirstName" class="text-danger"></span>
+    </div>
+            <div class="form-group">
+                <label asp-for="Name.LastName" class="control-label"></label>
+                <input asp-for="Name.LastName" class="form-control" />
+                <span asp-validation-for="Name.LastName" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Role" class="control-label"></label>
+                <select asp-for="Role" asp-items="Html.GetEnumSelectList<RoleType>()" class="form-select">
+                    <option value="">Select Role</option>
+                </select>
+                <span asp-validation-for="Role" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="ContactInfo.Email" class="control-label"></label>
+                <input asp-for="ContactInfo.Email" class="form-control" />
+                <span asp-validation-for="ContactInfo.Email" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="ContactInfo.Phone" class="control-label"></label>
+                <input asp-for="ContactInfo.Phone" class="form-control" />
+                <span asp-validation-for="ContactInfo.Phone" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="ContactInfo.Location" class="control-label"></label>
+                <input asp-for="ContactInfo.Location" class="form-control" />
+                <span asp-validation-for="ContactInfo.Location" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <input type="submit" value="Save" class="btn btn-primary" />
+            </div>
+        </form>
+    </div>
+</div>
+</div>
+
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

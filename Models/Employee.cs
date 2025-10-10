@@ -14,7 +14,7 @@ namespace NoSQL_Project.Models
         public string? Id { get; set; }
 
         [BsonElement("EmployeeId")]
-        public string EmployeeId { get; set; } = "";
+        public int EmployeeId { get; set; }
 
         [BsonElement("Name")]
         public Name Name { get; set; }

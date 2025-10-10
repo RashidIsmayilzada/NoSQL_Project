@@ -13,7 +13,7 @@ namespace NoSQL_Project.Models
         public string? Id { get; set; }
 
         [BsonRepresentation(BsonType.String)]
-        public string TicketId { get; set; } = "";
+        public int TicketId { get; set; }
 
         [Required]
         public string Title { get; set; } = "";

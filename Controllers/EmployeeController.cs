@@ -4,7 +4,7 @@ using NoSQL_Project.Services.Interfaces;
 
 namespace NoSQL_Project.Controllers
 {
-    public class EmployeeController : Controller
+    public class EmployeeController : BaseLoggedInController
     {
         private readonly IEmployeeService _employeeService;
 
@@ -17,7 +17,7 @@ namespace NoSQL_Project.Controllers
         [HttpGet]
         public async Task<IActionResult> Index()
         {
-            var employees = await _employeeService.GetAllEmployeesAsync();
+            var employees = await _employeeService.GetEmployeesWithTicketAsync();
             return View(employees);
         }
 
@@ -92,7 +92,7 @@ namespace NoSQL_Project.Controllers
             }
 
             await _employeeService.UpdateEmployeeAsync(employee);
-            return View(new { message = "Employee updated successfully", id = employee.Id, employee = employee });
+            return View(employee);
         }
 
         // GET: /Employee/Delete/{id}

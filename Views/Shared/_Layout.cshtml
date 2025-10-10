@@ -1,153 +1,159 @@
 ﻿<!DOCTYPE html>
 <html lang="en">
 <head>
-	<meta charset="utf-8" />
-	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-	<title>@ViewData["Title"] - NoSQL_Project</title>
-	<script type="importmap"></script>
-	<link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-	<link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-	<link rel="stylesheet" href="~/NoSQL_Project.styles.css" asp-append-version="true" />
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - NoSQL_Project</title>
+    <script type="importmap"></script>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/NoSQL_Project.styles.css" asp-append-version="true" />
 </head>
 <body>
-    <!-- Header Nav Bar Mobile -->
-    <nav class="navbar navbar-dark bg-dark d-md-none px-2 rounded m-2">
-        <div class="container-fluid">
-            <a class="navbar-brand mx-auto fw-semibold text-white">The Garden Group</a>
+    @{
+        //Check if user is logged in, if not don't show header
+        Employee? loggedInEmployee = (Employee?)ViewData["LoggedInEmployee"];
+        if (loggedInEmployee != null)
+        {
+            <!-- Header Nav Bar Mobile -->
+            <nav class="navbar navbar-dark bg-dark d-md-none px-2 rounded m-2">
+                <div class="container-fluid">
+                    <a class="navbar-brand mx-auto fw-semibold text-white">The Garden Group</a>
 
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mobileNav"
+                    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mobileNav"
                     aria-controls="mobileNav" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-        </div>
+                        <span class="navbar-toggler-icon"></span>
+                    </button>
+                </div>
 
-        <div class="collapse navbar-collapse" id="mobileNav">
-            <ul class="navbar-nav">
-                <li class="nav-item">
-                    <a class="nav-link text-white" asp-area="" asp-controller="Home" asp-action="Index">
-                        Home
+                <div class="collapse navbar-collapse" id="mobileNav">
+                    <ul class="navbar-nav">
+                        <li class="nav-item">
+                            <a class="nav-link text-white" asp-area="" asp-controller="Home" asp-action="Index">
+                                Home
+                            </a>
+                        </li>
+
+                        <!-- Dashboard Link -->
+                        <li class="nav-item">
+                            <a class="nav-link text-white" href="#">Dashboard</a>
+                        </li>
+
+                        <!-- My Tickets dropdown -->
+                        <li class="nav-item dropdown">
+                            <a class="nav-link text-white dropdown-toggle" href="#" id="mobileMyTickets" role="button" data-bs-toggle="dropdown"
+                            aria-expanded="false">My Tickets</a>
+                            <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="mobileMyTickets">
+                                <li><a class="dropdown-item text-white" href="#">Dashboard</a></li>
+                                <li><a class="dropdown-item text-white" href="#">List</a></li>
+                                <li><a class="dropdown-item text-white" href="#">Create New</a></li>
+                            </ul>
+                        </li>
+
+                        <!-- All Tickets dropdown -->
+                        <li class="nav-item dropdown">
+                            <a class="nav-link text-white dropdown-toggle" href="#" id="mobileAllTickets" role="button" data-bs-toggle="dropdown"
+                            aria-expanded="false">All Tickets</a>
+                            <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="mobileAllTickets">
+                                <li><a class="dropdown-item text-white" asp-area="" asp-controller="Employee" asp-action="Index">List</a></li>
+                                <li><a class="dropdown-item text-white" href="#">Create New</a></li>
+                            </ul>
+                        </li>
+
+                        <!-- Employees dropdown -->
+                        <li class="nav-item dropdown">
+                            <a class="nav-link text-white dropdown-toggle" href="#" id="mobileEmployees" role="button" data-bs-toggle="dropdown"
+                            aria-expanded="false">Employees</a>
+                            <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="mobileEmployees">
+                                <li><a class="dropdown-item text-white" href="#">List</a></li>
+                                <li><a class="dropdown-item text-white" href="#">Create New</a></li>
+                            </ul>
+                        </li>
+
+                        <li><hr class="dropdown-divider"></li>
+
+                        <li class="nav-item dropdown">
+                            <a class="nav-link text-white dropdown-toggle" href="#" id="mobileUser" role="button" data-bs-toggle="dropdown"
+                            aria-expanded="false"><strong>Phil Smith</strong></a>
+                            <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="mobileUser">
+                                <li><a class="dropdown-item" href="#">Sign out</a></li>
+                            </ul>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+
+            <!-- Side Nav Desktop -->
+            <div class="d-none d-md-flex flex-column flex-shrink-0 p-3 text-white bg-dark m-2 rounded-3" style="width: 280px;">
+                <h1 class="fs-4 text-center mb-1">The Garden Group</h1>
+                <p class="text-center mb-3">Incident Management System</p>
+                <hr class="border-secondary">
+                <ul class="nav nav-pills flex-column mb-auto">
+                    <li class="nav-item">
+                        <a class="nav-link text-white" asp-area="" asp-controller="Home" asp-action="Index">
+                            Home
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="#" class="nav-link text-white">Dashboard</a>
+                    </li>
+
+                    <li class="nav-item">
+                        <button class="nav-link text-white collapsed text-start" data-bs-toggle="collapse"
+                        data-bs-target="#mytickets-collapse" aria-expanded="false">
+                            My Tickets
+                        </button>
+                        <div class="collapse" id="mytickets-collapse">
+                            <ul class="btn-toggle-nav list-unstyled fw-normal pb-1 small ms-4">
+                                <li><a href="#" class="link-light rounded">Dashboard</a></li>
+                                <li><a href="#" class="link-light rounded">List</a></li>
+                                <li><a href="#" class="link-light rounded">Create New</a></li>
+                            </ul>
+                        </div>
+                    </li>
+
+                    <li class="nav-item">
+                        <button class="nav-link text-white collapsed text-start" data-bs-toggle="collapse"
+                        data-bs-target="#alltickets-collapse" aria-expanded="false">
+                            All Tickets
+                        </button>
+                        <div class="collapse" id="alltickets-collapse">
+                            <ul class="btn-toggle-nav list-unstyled fw-normal pb-1 small ms-4">
+                                <li><a class="link-light" asp-area="" asp-controller="Employee" asp-action="Index">List</a></li>
+                                <li><a href="#" class="link-light rounded">Create New</a></li>
+                            </ul>
+                        </div>
+                    </li>
+
+                    <li class="nav-item">
+                        <button class="nav-link text-white collapsed text-start" data-bs-toggle="collapse"
+                        data-bs-target="#employees-collapse" aria-expanded="false">
+                            Employees
+                        </button>
+                        <div class="collapse" id="employees-collapse">
+                            <ul class="btn-toggle-nav list-unstyled fw-normal pb-1 small ms-4">
+                                <li><a class="link-light" asp-area="" asp-controller="Employee" asp-action="Index">List</a></li>
+                                <li><a href="#" class="link-light rounded">Create New</a></li>
+                            </ul>
+                        </div>
+                    </li>
+                </ul>
+                <hr class="border-secondary">
+                <div class="dropdown">
+                    <a href="#" class="d-flex align-items-center text-white text-decoration-none dropdown-toggle"
+                    id="dropdownUser1" data-bs-toggle="dropdown" aria-expanded="false">
+                        <strong>Phil Smith</strong>
                     </a>
-                </li>
-
-                <!-- Dashboard Link -->
-                <li class="nav-item">
-                    <a class="nav-link text-white" href="#">Dashboard</a>
-                </li>
-
-                <!-- My Tickets dropdown -->
-                <li class="nav-item dropdown">
-                    <a class="nav-link text-white dropdown-toggle" href="#" id="mobileMyTickets" role="button" data-bs-toggle="dropdown"
-                       aria-expanded="false">My Tickets</a>
-                    <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="mobileMyTickets">
-                        <li><a class="dropdown-item text-white" href="#">Dashboard</a></li>
-                        <li><a class="dropdown-item text-white" href="#">List</a></li>
-                        <li><a class="dropdown-item text-white" href="#">Create New</a></li>
-                    </ul>
-                </li>
-
-                <!-- All Tickets dropdown -->
-                <li class="nav-item dropdown">
-                    <a class="nav-link text-white dropdown-toggle" href="#" id="mobileAllTickets" role="button" data-bs-toggle="dropdown"
-                       aria-expanded="false">All Tickets</a>
-                    <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="mobileAllTickets">
-                        <li><a class="dropdown-item text-white" asp-area="" asp-controller="Employee" asp-action="Index">List</a></li>
-                        <li><a class="dropdown-item text-white" href="#">Create New</a></li>
-                    </ul>
-                </li>
-
-                <!-- Employees dropdown -->
-                <li class="nav-item dropdown">
-                    <a class="nav-link text-white dropdown-toggle" href="#" id="mobileEmployees" role="button" data-bs-toggle="dropdown"
-                       aria-expanded="false">Employees</a>
-                    <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="mobileEmployees">
-                        <li><a class="dropdown-item text-white" href="#">List</a></li>
-                        <li><a class="dropdown-item text-white" href="#">Create New</a></li>
-                    </ul>
-                </li>
-
-                <li><hr class="dropdown-divider"></li>
-
-                <li class="nav-item dropdown">
-                    <a class="nav-link text-white dropdown-toggle" href="#" id="mobileUser" role="button" data-bs-toggle="dropdown"
-                       aria-expanded="false"><strong>Phil Smith</strong></a>
-                    <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="mobileUser">
+                    <ul class="dropdown-menu dropdown-menu-dark text-small shadow" aria-labelledby="dropdownUser1">
                         <li><a class="dropdown-item" href="#">Sign out</a></li>
                     </ul>
-                </li>
-            </ul>
-        </div>
-    </nav>
-
-    <!-- Side Nav Desktop -->
-    <div class="d-none d-md-flex flex-column flex-shrink-0 p-3 text-white bg-dark m-2 rounded-3" style="width: 280px;">
-        <h1 class="fs-4 text-center mb-1">The Garden Group</h1>
-        <p class="text-center mb-3">Incident Management System</p>
-        <hr class="border-secondary">
-        <ul class="nav nav-pills flex-column mb-auto">
-            <li class="nav-item">
-                <a class="nav-link text-white" asp-area="" asp-controller="Home" asp-action="Index">
-                    Home
-                </a>
-            </li>
-
-            <li>
-                <a href="#" class="nav-link text-white">Dashboard</a>
-            </li>
-
-            <li class="nav-item">
-                <button class="nav-link text-white collapsed text-start" data-bs-toggle="collapse"
-                        data-bs-target="#mytickets-collapse" aria-expanded="false">
-                    My Tickets
-                </button>
-                <div class="collapse" id="mytickets-collapse">
-                    <ul class="btn-toggle-nav list-unstyled fw-normal pb-1 small ms-4">
-                        <li><a href="#" class="link-light rounded">Dashboard</a></li>
-                        <li><a href="#" class="link-light rounded">List</a></li>
-                        <li><a href="#" class="link-light rounded">Create New</a></li>
-                    </ul>
                 </div>
-            </li>
-
-            <li class="nav-item">
-                <button class="nav-link text-white collapsed text-start" data-bs-toggle="collapse"
-                        data-bs-target="#alltickets-collapse" aria-expanded="false">
-                    All Tickets
-                </button>
-                <div class="collapse" id="alltickets-collapse">
-                    <ul class="btn-toggle-nav list-unstyled fw-normal pb-1 small ms-4">
-                        <li><a class="link-light" asp-area="" asp-controller="Employee" asp-action="Index">List</a></li>
-                        <li><a href="#" class="link-light rounded">Create New</a></li>
-                    </ul>
-                </div>
-            </li>
-
-            <li class="nav-item">
-                <button class="nav-link text-white collapsed text-start" data-bs-toggle="collapse"
-                        data-bs-target="#employees-collapse" aria-expanded="false">
-                    Employees
-                </button>
-                <div class="collapse" id="employees-collapse">
-                    <ul class="btn-toggle-nav list-unstyled fw-normal pb-1 small ms-4">
-                        <li><a class="link-light" asp-area="" asp-controller="Employee" asp-action="Index">List</a></li>
-                        <li><a href="#" class="link-light rounded">Create New</a></li>
-                    </ul>
-                </div>
-            </li>
-        </ul>
-        <hr class="border-secondary">
-        <div class="dropdown">
-            <a href="#" class="d-flex align-items-center text-white text-decoration-none dropdown-toggle"
-               id="dropdownUser1" data-bs-toggle="dropdown" aria-expanded="false">
-                <strong>Phil Smith</strong>
-            </a>
-            <ul class="dropdown-menu dropdown-menu-dark text-small shadow" aria-labelledby="dropdownUser1">
-                <li><a class="dropdown-item" href="#">Sign out</a></li>
-            </ul>
-        </div>
-    </div>
+            </div>
+        }}
 
 	<div class="container p-0">
-		<main role="main" class="pb-3">
+		<main role="main" class="pb-3 w-100 h-100">
 			@RenderBody()
 		</main>
 	</div>
