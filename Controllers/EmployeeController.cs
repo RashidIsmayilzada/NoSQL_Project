@@ -27,10 +27,10 @@ namespace NoSQL_Project.Controllers
         {
             if (string.IsNullOrEmpty(id)) return NotFound();
 
-            var employee = await _employeeService.GetEmployeeByIdAsync(id);
+            Employee employee = await _employeeService.GetEmployeeByIdAsync(id);
 
 
-            return View(employee);
+            return Ok(employee);
         }
 
         // GET: /Employee/Create
@@ -42,16 +42,15 @@ namespace NoSQL_Project.Controllers
 
         // POST: /Employee/Create
         [HttpPost]
-        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(Employee employee)
         {
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
-                await _employeeService.CreateEmployeeAsync(employee);
-                return RedirectToAction(nameof(Index));
+                return BadRequest(ModelState);
             }
 
-            return View(employee);
+            await _employeeService.CreateEmployeeAsync(employee);
+            return Ok(new { message = "Employee created successfully", id = employee.Id });
         }
 
         // GET: /Employee/Update/{id}
@@ -62,21 +61,30 @@ namespace NoSQL_Project.Controllers
 
             var employee = await _employeeService.GetEmployeeByIdAsync(id);
 
-            return View(employee);
+            return Ok(employee);
         }
 
         // POST: /Employee/Update
         [HttpPost]
-        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Update(Employee employee)
         {
-            if (ModelState.IsValid)
+            if (employee == null)
             {
-                await _employeeService.UpdateEmployeeAsync(employee);
-                return RedirectToAction(nameof(Index));
+                return BadRequest("Employee is null");
             }
 
-            return View(employee);
+            if (string.IsNullOrEmpty(employee.Id))
+            {
+                return BadRequest("Employee Id is missing");
+            }
+
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            await _employeeService.UpdateEmployeeAsync(employee);
+            return Ok(new { message = "Employee updated successfully", id = employee.Id, employee = employee });
         }
 
         // GET: /Employee/Delete/{id}
@@ -92,7 +100,6 @@ namespace NoSQL_Project.Controllers
 
         // POST: /Employee/Delete/5
         [HttpPost, ActionName("Delete")]
-        [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(string id)
         {
             await _employeeService.DeleteEmployeeAsync(id);
