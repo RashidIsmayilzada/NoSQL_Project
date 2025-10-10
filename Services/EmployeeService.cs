@@ -10,9 +10,30 @@ namespace NoSQL_Project.Services
         public EmployeeService(IEmployeeRepository employeeRepository) {
             _employeeRepository = employeeRepository;
         }
-        public List<Employee> GetAllEmployees()
+        
+        public async Task<List<Employee>> GetAllEmployeesAsync()
         {
-            return _employeeRepository.GetAllEmployees();
+            return await _employeeRepository.GetAllEmployees();
+        }
+        
+        public async Task<Employee> GetEmployeeByIdAsync(string? id)
+        {
+            return await _employeeRepository.GetEmployeeById(id);
+        }
+        
+        public async Task CreateEmployeeAsync(Employee employee)
+        {
+            await _employeeRepository.CreateEmployee(employee);
+        }
+        
+        public async Task UpdateEmployeeAsync(Employee employee)
+        {
+            await _employeeRepository.UpdateEmployee(employee);
+        }
+
+        public async Task DeleteEmployeeAsync(string? id)
+        {
+            await _employeeRepository.DeleteEmployee(id);
         }
     }
 }

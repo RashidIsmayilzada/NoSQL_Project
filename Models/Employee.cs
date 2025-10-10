@@ -11,7 +11,7 @@ namespace NoSQL_Project.Models
     {
         [BsonId]
         [BsonRepresentation(BsonType.ObjectId)]
-        public string _id { get; set; }
+        public string? _id { get; set; }
 
         [BsonElement("Id")]
         public int Id { get; set; }
@@ -22,18 +22,6 @@ namespace NoSQL_Project.Models
         [BsonElement("Role")]
         [BsonRepresentation(BsonType.String)]
         public RoleType Role { get; set; }
-
-        [BsonElement("Email")]
-        public string Email { get; set; }
-
-        [BsonElement("Phone")]
-        public string Phone { get; set; }
-
-        [BsonElement("Location")]
-        public string Location { get; set; }
-
-        [BsonElement("Password")]
-        public string Password { get; set; }
 
         [BsonElement("contactInfo")]
         public ContactInfo ContactInfo { get; set; }
