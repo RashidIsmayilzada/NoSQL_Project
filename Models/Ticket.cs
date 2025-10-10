@@ -5,6 +5,7 @@ using NoSQL_Project.Models.Enums;
 
 namespace NoSQL_Project.Models
 {
+    [BsonIgnoreExtraElements]
     public class Ticket
     {
         [BsonId]
