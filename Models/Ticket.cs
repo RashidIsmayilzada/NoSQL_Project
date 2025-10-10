@@ -5,11 +5,15 @@ using NoSQL_Project.Models.Enums;
 
 namespace NoSQL_Project.Models
 {
+    [BsonIgnoreExtraElements]
     public class Ticket
     {
         [BsonId]
         [BsonRepresentation(BsonType.ObjectId)]
         public string? Id { get; set; }
+
+        [BsonRepresentation(BsonType.String)]
+        public string TicketId { get; set; } = "";
 
         [Required]
         public string Title { get; set; } = "";
