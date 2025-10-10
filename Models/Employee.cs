@@ -11,7 +11,10 @@ namespace NoSQL_Project.Models
     {
         [BsonId]
         [BsonRepresentation(BsonType.ObjectId)]
-        public string Id { get; set; }
+        public string _id { get; set; }
+
+        [BsonElement("Id")]
+        public int Id { get; set; }
 
         [BsonElement("Name")]
         public Name Name { get; set; }

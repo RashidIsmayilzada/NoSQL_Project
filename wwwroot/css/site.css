@@ -18,7 +18,19 @@ html {
 }
 
 body {
-  margin-bottom: 60px;
+    margin: 0;
+    display: block;
+    height: auto;
+    overflow-y: auto;
+}
+
+main {
+    max-width: 100%;
+    max-height: none;
+    overflow: visible;
+    background: #f9f9f9;
+    padding: 10px;
+    box-sizing: border-box;
 }
 
 .form-floating > .form-control-plaintext::placeholder, .form-floating > .form-control::placeholder {
@@ -28,4 +40,31 @@ body {
 
 .form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
   text-align: start;
+}
+
+/*Desktop and Tablet*/
+@media (min-width: 768px) {
+    body {
+        display: flex;
+        flex-wrap: nowrap;
+        height: 100vh;
+        overflow: hidden;
+    }
+
+    .sidebar {
+        width: 280px;
+        flex: 0 0 280px;
+        position: sticky;
+        top: .5rem;
+        align-self: flex-start;
+        max-height: calc(100vh - 1rem);
+        overflow: auto;
+    }
+
+    main {
+        flex: 1 1 auto;
+        max-width: 100%;
+        max-height: 100%;
+        overflow: auto;
+    }
 }
