@@ -30,7 +30,7 @@ namespace NoSQL_Project.Controllers
             Employee employee = await _employeeService.GetEmployeeByIdAsync(id);
 
 
-            return View(employee);
+            return Ok(employee);
         }
         
         // GET: /Employee/EmployeesWithTickets
@@ -58,7 +58,7 @@ namespace NoSQL_Project.Controllers
             }
 
             await _employeeService.CreateEmployeeAsync(employee);
-            return View(new { message = "Employee created successfully", id = employee.Id });
+            return Ok(new { message = "Employee created successfully", id = employee.Id });
         }
 
         // GET: /Employee/Update/{id}
@@ -69,7 +69,7 @@ namespace NoSQL_Project.Controllers
 
             var employee = await _employeeService.GetEmployeeByIdAsync(id);
 
-            return View(employee);
+            return Ok(employee);
         }
 
         // POST: /Employee/Update
@@ -86,13 +86,11 @@ namespace NoSQL_Project.Controllers
                 return BadRequest("Employee Id is missing");
             }
 
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
+            // Skip ModelState validation for updates
+            ModelState.Clear();
 
             await _employeeService.UpdateEmployeeAsync(employee);
-            return View(new { message = "Employee updated successfully", id = employee.Id, employee = employee });
+            return Ok(new { message = "Employee updated successfully", id = employee.Id, employee = employee });
         }
 
         // GET: /Employee/Delete/{id}
