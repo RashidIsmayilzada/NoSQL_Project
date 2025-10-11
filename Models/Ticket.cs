@@ -46,7 +46,7 @@ namespace NoSQL_Project.Models
         [BsonElement("date")]
         public string Date { get; set; } = "";
 
-        [BsonIgnore]
-        public Employee Employee { get; set; } = new();
+        //[BsonIgnore]
+        //public Employee Employee { get; set; } = new();
     }
 }

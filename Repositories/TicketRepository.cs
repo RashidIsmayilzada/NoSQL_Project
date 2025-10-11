@@ -1,3 +1,4 @@
+using MongoDB.Bson;
 using MongoDB.Driver;
 using NoSQL_Project.Models;
 using NoSQL_Project.Repositories.Interfaces;
@@ -14,7 +15,20 @@ public class TicketRepository : ITicketRepository
     }
     public async Task<List<Ticket>> GetAllTickets()
     {
-        return await _tickets.Find(FilterDefinition<Ticket>.Empty).ToListAsync();
+
+        var pipeline = new[]
+{
+                new BsonDocument("$lookup", new BsonDocument
+                {
+                    { "from", "Employee" },
+                    { "localField", "ReportedBy" },
+                    { "foreignField", "_id" },
+                    { "as", "ReportedBy" }
+                })
+            };
+
+        var result = await _tickets.Aggregate<Ticket>(pipeline).ToListAsync();
+        return result;
     }
     
     public async Task<Ticket> GetTicketById(string id)

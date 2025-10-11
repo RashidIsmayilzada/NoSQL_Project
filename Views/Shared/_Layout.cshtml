@@ -1,4 +1,5 @@
-﻿<!DOCTYPE html>
+﻿@using NoSQL_Project.Models.Enums
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
@@ -49,32 +50,35 @@
                                 <li><a class="dropdown-item text-white" href="#">Create New</a></li>
                             </ul>
                         </li>
+                        @{
+                            if (loggedInEmployee.Role == RoleType.ServiceDesk)
+                            {
+                                <!-- All Tickets dropdown -->
+                                <li class="nav-item dropdown">
+                                    <a class="nav-link text-white dropdown-toggle" href="#" id="mobileAllTickets" role="button" data-bs-toggle="dropdown"
+                                    aria-expanded="false">All Tickets</a>
+                                    <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="mobileAllTickets">
+                                        <li><a class="dropdown-item text-white" asp-area="" asp-controller="Ticket" asp-action="Index">List</a></li>
+                                        <li><a class="dropdown-item text-white" href="#">Create New</a></li>
+                                    </ul>
+                                </li>
 
-                        <!-- All Tickets dropdown -->
-                        <li class="nav-item dropdown">
-                            <a class="nav-link text-white dropdown-toggle" href="#" id="mobileAllTickets" role="button" data-bs-toggle="dropdown"
-                            aria-expanded="false">All Tickets</a>
-                            <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="mobileAllTickets">
-                                <li><a class="dropdown-item text-white" asp-area="" asp-controller="Ticket" asp-action="Index">List</a></li>
-                                <li><a class="dropdown-item text-white" href="#">Create New</a></li>
-                            </ul>
-                        </li>
-
-                        <!-- Employees dropdown -->
-                        <li class="nav-item dropdown">
-                            <a class="nav-link text-white dropdown-toggle" href="#" id="mobileEmployees" role="button" data-bs-toggle="dropdown"
-                            aria-expanded="false">Employees</a>
-                            <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="mobileEmployees">
-                                <li><a class="dropdown-item text-white" href="#">List</a></li>
-                                <li><a class="dropdown-item text-white" href="#">Create New</a></li>
-                            </ul>
-                        </li>
-
+                                <!-- Employees dropdown -->
+                                <li class="nav-item dropdown">
+                                    <a class="nav-link text-white dropdown-toggle" href="#" id="mobileEmployees" role="button" data-bs-toggle="dropdown"
+                                    aria-expanded="false">Employees</a>
+                                    <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="mobileEmployees">
+                                        <li><a class="dropdown-item text-white" href="#">List</a></li>
+                                        <li><a class="dropdown-item text-white" href="#">Create New</a></li>
+                                    </ul>
+                                </li>
+                            }
+                        }
                         <li><hr class="dropdown-divider"></li>
 
                         <li class="nav-item dropdown">
                             <a class="nav-link text-white dropdown-toggle" href="#" id="mobileUser" role="button" data-bs-toggle="dropdown"
-                            aria-expanded="false"><strong>Phil Smith</strong></a>
+                               aria-expanded="false"><strong>@loggedInEmployee.Name.ToString()</strong></a>
                             <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="mobileUser">
                                 <li><a class="dropdown-item" href="#">Sign out</a></li>
                             </ul>
@@ -143,7 +147,7 @@
                 <div class="dropdown">
                     <a href="#" class="d-flex align-items-center text-white text-decoration-none dropdown-toggle"
                     id="dropdownUser1" data-bs-toggle="dropdown" aria-expanded="false">
-                        <strong>Phil Smith</strong>
+                        <strong>@loggedInEmployee.Name.ToString()</strong>
                     </a>
                     <ul class="dropdown-menu dropdown-menu-dark text-small shadow" aria-labelledby="dropdownUser1">
                         <li><a class="dropdown-item" href="#">Sign out</a></li>

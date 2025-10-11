@@ -18,14 +18,14 @@ namespace NoSQL_Project.Models
         public int EmployeeId { get; set; }
 
         [BsonElement("Name")]
-        public Name Name { get; set; }
+        public EmployeeName Name { get; set; }
 
         [BsonElement("Role")]
         [BsonRepresentation(BsonType.String)]
         public RoleType Role { get; set; }
 
         [BsonElement("contactInfo")]
-        public ContactInfo ContactInfo { get; set; }
+        public EmployeeContactInfo ContactInfo { get; set; }
 
         [BsonElement("ReportedTickets")]
         [BsonIgnoreIfNull]
@@ -38,25 +38,6 @@ namespace NoSQL_Project.Models
 
     }
 
-    public class Name
-    {
-        [BsonElement("FirstName")]
-        public string FirstName { get; set; } = "";
 
-        [BsonElement("LastName")]
-        public string LastName { get; set; } = "";
-    }
-
-    public class ContactInfo
-    {
-        [BsonElement("Email")]
-        public string Email { get; set; } = "";
-
-        [BsonElement("Phone")]
-        public string Phone { get; set; } = "";
-
-        [BsonElement("Location")]
-        public string Location { get; set; } = "";
-    }
 
 }

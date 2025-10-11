@@ -8,7 +8,7 @@ namespace NoSQL_Project.Controllers
 {
     
     public class EmployeeController(IEmployeeService employeeService, ILogger<EmployeeController> logger)
-        : Controller
+        : BaseLoggedInController
     {
         private readonly IEmployeeService _employeeService = employeeService;
         private readonly ILogger<EmployeeController> _logger = logger;
