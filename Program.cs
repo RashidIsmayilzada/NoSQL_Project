@@ -40,6 +40,8 @@ builder.Services.AddScoped(sp =>
 
 builder.Services.AddScoped<IEmployeeRepository, EmployeeRepository>();
 builder.Services.AddScoped<IEmployeeService, EmployeeService>();
+builder.Services.AddScoped<ITicketRepository, TicketRepository>();
+builder.Services.AddScoped<ITicketService, TicketService>();
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();

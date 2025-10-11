@@ -1,4 +1,5 @@
-﻿using System.Net.Sockets;
+﻿using System.ComponentModel.DataAnnotations;
+using System.Net.Sockets;
 using System.Text.Json.Serialization;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
@@ -14,16 +15,19 @@ namespace NoSQL_Project.Models
         public string? Id { get; set; }
 
         [BsonElement("EmployeeId")]
-        public string EmployeeId { get; set; } = "";
+        public int EmployeeId { get; set; }
 
         [BsonElement("Name")]
+        [JsonPropertyName("Name")]
         public Name Name { get; set; }
 
         [BsonElement("Role")]
         [BsonRepresentation(BsonType.String)]
+        [JsonPropertyName("Role")]
         public RoleType Role { get; set; }
 
         [BsonElement("contactInfo")]
+        [JsonPropertyName("contactInfo")]
         public ContactInfo ContactInfo { get; set; }
 
         [BsonElement("ReportedTickets")]
