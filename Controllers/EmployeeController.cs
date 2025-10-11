@@ -86,10 +86,8 @@ namespace NoSQL_Project.Controllers
                 return BadRequest("Employee Id is missing");
             }
 
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
+            // Skip ModelState validation for updates
+            ModelState.Clear();
 
             await _employeeService.UpdateEmployeeAsync(employee);
             return View(employee);

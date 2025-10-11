@@ -1,4 +1,6 @@
-﻿using NoSQL_Project.Models;
+﻿using System.Security.Cryptography;
+using System.Text;
+using NoSQL_Project.Models;
 using NoSQL_Project.Repositories.Interfaces;
 using NoSQL_Project.Services.Interfaces;
 
@@ -39,6 +41,23 @@ namespace NoSQL_Project.Services
         public async Task<List<Employee>> GetEmployeesWithTicketAsync()
         {
             return await _employeeRepository.GetEmployeesWithTicket();
+        }
+
+        public async Task<Employee> GetEmployeeByLoginCredentialsAsync(string email, string password)
+        {
+            string passwordHashed = HashPassword(password);
+
+            return await _employeeRepository.GetEmployeeByLoginCredentials(email, passwordHashed);
+        }
+
+        // Hash password with SHA-256
+        private string HashPassword(string password)
+        {
+            using (SHA256 sha256 = SHA256.Create())
+            {
+                byte[] hashBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(password));
+                return Convert.ToBase64String(hashBytes);
+            }
         }
     }
 }

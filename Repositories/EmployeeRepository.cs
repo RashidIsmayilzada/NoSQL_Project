@@ -36,17 +36,32 @@ namespace NoSQL_Project.Repositories
             var result = await _employees.Aggregate<Employee>(pipeline).ToListAsync();
             return result;
         }
-        
+
         public async Task<Employee> GetEmployeeById(string? id)
         {
             return await _employees.Find(emp => emp.Id == id).FirstOrDefaultAsync();
         }
-        
+
+        public async Task<Employee> GetEmployeeByLoginCredentials(string email, string passwordHashed)
+        {
+            var pipeline = new[]
+            {
+                new BsonDocument("$match", new BsonDocument
+                {
+                    { "contactInfo.Email", email },
+                    { "Password", passwordHashed }
+                })
+            };
+
+            var result = await _employees.Aggregate<Employee>(pipeline).FirstOrDefaultAsync();
+            return result;
+        }
+
         public async Task CreateEmployee(Employee employee)
         {
             await _employees.InsertOneAsync(employee);
         }
-        
+
         public async Task UpdateEmployee(Employee employee)
         {
             await _employees.ReplaceOneAsync(emp => emp.Id == employee.Id, employee);

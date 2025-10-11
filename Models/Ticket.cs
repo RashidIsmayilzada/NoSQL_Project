@@ -31,8 +31,7 @@ namespace NoSQL_Project.Models
         [BsonRepresentation(BsonType.String)]
         public TicketStatus Status { get; set; }
 
-        [BsonRepresentation(BsonType.ObjectId)]
-        public string? ReportedBy { get; set; }
+        public Employee ReportedBy { get; set; } = new();
 
         [BsonElement("HandeledBy")]
         public List<HandlingInfo> HandledBy { get; set; } = new();

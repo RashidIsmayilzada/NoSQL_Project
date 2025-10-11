@@ -4,7 +4,7 @@ using NoSQL_Project.Models;
 
 namespace NoSQL_Project.Controllers;
 
-public class HomeController : Controller
+public class HomeController : BaseLoggedInController
 {
     private readonly ILogger<HomeController> _logger;
 
