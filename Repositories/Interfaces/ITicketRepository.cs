@@ -9,4 +9,7 @@ public interface ITicketRepository
     Task CreateTicket(Ticket ticket);
     Task UpdateTicket(string id, Ticket ticket);
     Task DeleteTicket(string id);
+    Task<int> GetTotalTicketsCountAsync();
+    Task<int> GetUnresolvedTicketsCountAsync();
+    Task<int> GetTicketsPastDeadlineCountAsync();
 }

@@ -1,0 +1,79 @@
+@model NoSQL_Project.Models.Ticket
+
+@{
+    ViewData["Title"] = "Edit Ticket";
+}
+
+<h1>Edit Ticket</h1>
+
+<hr />
+<div class="row">
+    <div class="col-md-8">
+        <form asp-action="Edit" method="post">
+            <input type="hidden" asp-for="Id" />
+            <input type="hidden" name="ReportedById" value="@Model.ReportedBy?.Id" />
+            @for (int i = 0; i < Model.HandledBy.Count; i++)
+            {
+                <input type="hidden" name="HandledBy[@i].EmployeeId" value="@Model.HandledBy[i].EmployeeId" />
+                <input type="hidden" name="HandledBy[@i].Date" value="@Model.HandledBy[i].Date" />
+            }
+
+            <div class="mb-3">
+                <label asp-for="TicketId" class="form-label"></label>
+                <input asp-for="TicketId" class="form-control" />
+                <span asp-validation-for="TicketId" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Title" class="form-label"></label>
+                <input asp-for="Title" class="form-control" />
+                <span asp-validation-for="Title" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Type" class="form-label"></label>
+                <select asp-for="Type" class="form-select" asp-items="Html.GetEnumSelectList<NoSQL_Project.Models.Enums.TicketType>()">
+                    <option value="">-- Select Type --</option>
+                </select>
+                <span asp-validation-for="Type" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Priority" class="form-label"></label>
+                <select asp-for="Priority" class="form-select" asp-items="Html.GetEnumSelectList<NoSQL_Project.Models.Enums.TicketPriority>()">
+                    <option value="">-- Select Priority --</option>
+                </select>
+                <span asp-validation-for="Priority" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Status" class="form-label"></label>
+                <select asp-for="Status" class="form-select" asp-items="Html.GetEnumSelectList<NoSQL_Project.Models.Enums.TicketStatus>()">
+                    <option value="">-- Select Status --</option>
+                </select>
+                <span asp-validation-for="Status" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Deadline" class="form-label"></label>
+                <input asp-for="Deadline" type="date" class="form-control" />
+                <span asp-validation-for="Deadline" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Description" class="form-label"></label>
+                <textarea asp-for="Description" class="form-control" rows="5"></textarea>
+                <span asp-validation-for="Description" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <button type="submit" class="btn btn-primary">Save Changes</button>
+                <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

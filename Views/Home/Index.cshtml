@@ -1,8 +1,67 @@
-﻿@{
-    ViewData["Title"] = "Home Page";
+﻿@model NoSQL_Project.Models.DashboardViewModel
+@{
+    ViewData["Title"] = "Dashboard";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0">Current incidents</h2>
+        <a asp-controller="Ticket" asp-action="Index" class="btn btn-primary">SHOW LIST</a>
+    </div>
+
+    <div class="row g-4">
+        <!-- Unresolved Incidents Card -->
+        <div class="col-md-6">
+            <div class="card border-warning h-100">
+                <div class="card-body d-flex flex-column align-items-center justify-content-center p-4">
+                    <h5 class="card-title text-muted mb-2">Unresolved incidents</h5>
+                    <p class="text-muted small mb-4">All tickets currently open</p>
+
+                    <div class="position-relative" style="width: 200px; height: 200px;">
+                        <svg viewBox="0 0 200 200" style="transform: rotate(-90deg);">
+                            <!-- Background circle -->
+                            <circle cx="100" cy="100" r="80" fill="none" stroke="#e0e0e0" stroke-width="20"/>
+                            <!-- Progress circle -->
+                            <circle cx="100" cy="100" r="80" fill="none"
+                                    stroke="#ffa726"
+                                    stroke-width="20"
+                                    stroke-dasharray="@(2 * Math.PI * 80)"
+                                    stroke-dashoffset="@(2 * Math.PI * 80 * (1 - ((double)Model.UnresolvedTickets / Math.Max(Model.TotalTickets, 1))))"
+                                    stroke-linecap="round"/>
+                        </svg>
+                        <div class="position-absolute top-50 start-50 translate-middle text-center">
+                            <h2 class="mb-0 fw-bold">@Model.UnresolvedTickets/@Model.TotalTickets</h2>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Incidents Past Deadline Card -->
+        <div class="col-md-6">
+            <div class="card border-danger h-100">
+                <div class="card-body d-flex flex-column align-items-center justify-content-center p-4">
+                    <h5 class="card-title text-muted mb-2">Incidents past deadline</h5>
+                    <p class="text-muted small mb-4">These tickets need your immediate attention</p>
+
+                    <div class="position-relative" style="width: 200px; height: 200px;">
+                        <svg viewBox="0 0 200 200" style="transform: rotate(-90deg);">
+                            <!-- Background circle -->
+                            <circle cx="100" cy="100" r="80" fill="none" stroke="#e0e0e0" stroke-width="20"/>
+                            <!-- Progress circle -->
+                            <circle cx="100" cy="100" r="80" fill="none"
+                                    stroke="#e53935"
+                                    stroke-width="20"
+                                    stroke-dasharray="@(2 * Math.PI * 80)"
+                                    stroke-dashoffset="@(2 * Math.PI * 80 * (1 - ((double)Model.TicketsPastDeadline / Math.Max(Model.TotalTickets, 1))))"
+                                    stroke-linecap="round"/>
+                        </svg>
+                        <div class="position-absolute top-50 start-50 translate-middle text-center">
+                            <h2 class="mb-0 fw-bold">@Model.TicketsPastDeadline</h2>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>

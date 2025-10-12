@@ -185,7 +185,7 @@ namespace NoSQL_Project.Controllers
         // POST: /Ticket/Edit
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(Ticket ticket)
+        public async Task<IActionResult> Edit(Ticket ticket, string reportedById)
         {
             try
             {
@@ -211,10 +211,33 @@ namespace NoSQL_Project.Controllers
                     return View(ticket);
                 }
 
+                // Remove ModelState errors for ReportedBy since it's not bound from the form
+                ModelState.Remove("ReportedBy");
+
+                // Remove ModelState errors for HandledBy Employee objects since they're not bound from the form
+                // The Employee property in HandlingInfo is marked with [BsonIgnore] and is only populated during reads
+                var handledByKeys = ModelState.Keys.Where(k => k.StartsWith("HandledBy[") && k.Contains(".Employee")).ToList();
+                foreach (var key in handledByKeys)
+                {
+                    ModelState.Remove(key);
+                }
+
                 if (!ModelState.IsValid)
                 {
                     _logger.LogWarning("Invalid model state for ticket edit: {TicketId}", ticket.Id);
                     return View(ticket);
+                }
+
+                // Preserve the ReportedBy employee ID
+                if (!string.IsNullOrEmpty(reportedById))
+                {
+                    ticket.ReportedBy = new Employee { Id = reportedById };
+                }
+
+                // Ensure HandledBy list is initialized
+                if (ticket.HandledBy == null)
+                {
+                    ticket.HandledBy = new List<HandlingInfo>();
                 }
 
                 _logger.LogInformation("Updating ticket: {TicketId}", ticket.Id);

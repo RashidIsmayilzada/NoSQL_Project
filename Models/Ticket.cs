@@ -2,6 +2,7 @@
 using MongoDB.Bson;
 using System.ComponentModel.DataAnnotations;
 using NoSQL_Project.Models.Enums;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 
 namespace NoSQL_Project.Models
 {
@@ -31,8 +32,7 @@ namespace NoSQL_Project.Models
         [BsonRepresentation(BsonType.String)]
         public TicketStatus Status { get; set; }
 
-        [BsonRepresentation(BsonType.ObjectId)]
-        public string? ReportedBy { get; set; }
+        public Employee ReportedBy { get; set; }
 
         [BsonElement("HandeledBy")]
         public List<HandlingInfo> HandledBy { get; set; } = new();
@@ -48,6 +48,7 @@ namespace NoSQL_Project.Models
         public string Date { get; set; } = "";
 
         [BsonIgnore]
-        public Employee Employee { get; set; } = new();
+        [BindNever]
+        public Employee? Employee { get; set; }
     }
 }

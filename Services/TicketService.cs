@@ -42,4 +42,15 @@ public class TicketService : ITicketService
     {
         await _ticketRepository.UpdateTicket(id, ticket);
     }
+
+    public async Task<(int total, int unresolved, int pastDeadline)> GetDashboardStatisticsAsync()
+    {
+        var totalTask = _ticketRepository.GetTotalTicketsCountAsync();
+        var unresolvedTask = _ticketRepository.GetUnresolvedTicketsCountAsync();
+        var pastDeadlineTask = _ticketRepository.GetTicketsPastDeadlineCountAsync();
+
+        await Task.WhenAll(totalTask, unresolvedTask, pastDeadlineTask);
+
+        return (totalTask.Result, unresolvedTask.Result, pastDeadlineTask.Result);
+    }
 }

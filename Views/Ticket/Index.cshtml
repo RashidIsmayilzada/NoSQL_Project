@@ -1,0 +1,96 @@
+@model IEnumerable<NoSQL_Project.Models.Ticket>
+
+@{
+    ViewData["Title"] = "Ticket List";
+}
+
+<h1>All Tickets</h1>
+
+<p>
+    <a class="btn btn-primary" asp-action="Create">Create New Ticket</a>
+</p>
+
+<div class="table-responsive border border-dark rounded-3 p-1 mh-75 overflow-auto">
+    <table class="table table-hover">
+        <thead>
+            <tr class="text-primary">
+                <th>
+                    @Html.DisplayNameFor(model => model.TicketId)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.Title)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.Type)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.Priority)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.Status)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.Deadline)
+                </th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.TicketId)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.Title)
+                    </td>
+                    <td>
+                        <span class="badge bg-info">@Html.DisplayFor(modelItem => item.Type)</span>
+                    </td>
+                    <td>
+                        @{
+                            var priorityBadge = item.Priority switch
+                            {
+                                NoSQL_Project.Models.Enums.TicketPriority.Low => "bg-secondary",
+                                NoSQL_Project.Models.Enums.TicketPriority.Medium => "bg-warning",
+                                NoSQL_Project.Models.Enums.TicketPriority.High => "bg-danger",
+                                _ => "bg-secondary"
+                            };
+                        }
+                        <span class="badge @priorityBadge">@Html.DisplayFor(modelItem => item.Priority)</span>
+                    </td>
+                    <td>
+                        @{
+                            var statusBadge = item.Status switch
+                            {
+                                NoSQL_Project.Models.Enums.TicketStatus.Open => "bg-primary",
+                                NoSQL_Project.Models.Enums.TicketStatus.InProgress => "bg-info",
+                                NoSQL_Project.Models.Enums.TicketStatus.OnHold => "bg-warning",
+                                NoSQL_Project.Models.Enums.TicketStatus.Resolved => "bg-success",
+                                NoSQL_Project.Models.Enums.TicketStatus.Closed => "bg-secondary",
+                                _ => "bg-secondary"
+                            };
+                        }
+                        <span class="badge @statusBadge">@Html.DisplayFor(modelItem => item.Status)</span>
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.Deadline)
+                    </td>
+                    <td>
+                        <a class="btn btn-info btn-sm" asp-action="Details" asp-route-id="@item.Id">Details</a>
+                        <a class="btn btn-warning btn-sm" asp-action="Edit" asp-route-id="@item.Id">Edit</a>
+                        <a class="btn btn-danger btn-sm" asp-action="Delete" asp-route-id="@item.Id">Delete</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@if (!Model.Any())
+{
+    <div class="alert alert-info mt-3" role="alert">
+        No tickets found. <a asp-action="Create" class="alert-link">Create your first ticket</a>.
+    </div>
+}

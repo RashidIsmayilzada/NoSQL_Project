@@ -25,7 +25,7 @@ public class TicketRepository : ITicketRepository
                 { "from", "Employee" },
                 { "localField", "ReportedBy" },
                 { "foreignField", "_id" },
-                { "as", "ReportedByEmployee" },
+                { "as", "ReportedBy" },
                 { "pipeline", new BsonArray
                     {
                         // Project only fields we want (exclude ReportedTickets)
@@ -44,7 +44,7 @@ public class TicketRepository : ITicketRepository
             // Stage 2: Convert array to single object
             new BsonDocument("$unwind", new BsonDocument
             {
-                { "path", "$ReportedByEmployee" },
+                { "path", "$ReportedBy" },
                 { "preserveNullAndEmptyArrays", true }
             })
         };
@@ -68,7 +68,7 @@ public class TicketRepository : ITicketRepository
                 { "from", "Employee" },
                 { "localField", "ReportedBy" },
                 { "foreignField", "_id" },
-                { "as", "ReportedByEmployee" },
+                { "as", "ReportedBy" },
                 { "pipeline", new BsonArray
                     {
                         new BsonDocument("$project", new BsonDocument
@@ -85,7 +85,7 @@ public class TicketRepository : ITicketRepository
             // Convert array to single object
             new BsonDocument("$unwind", new BsonDocument
             {
-                { "path", "$ReportedByEmployee" },
+                { "path", "$ReportedBy" },
                 { "preserveNullAndEmptyArrays", true }
             })
         };
@@ -100,11 +100,83 @@ public class TicketRepository : ITicketRepository
     
     public async Task UpdateTicket(string id, Ticket ticket)
     {
-        await _tickets.ReplaceOneAsync(t => t.Id == id, ticket);
+        // Create a BsonDocument to update, storing only the Employee ID in ReportedBy field
+        var update = Builders<Ticket>.Update
+            .Set(t => t.TicketId, ticket.TicketId)
+            .Set(t => t.Title, ticket.Title)
+            .Set(t => t.Type, ticket.Type)
+            .Set(t => t.Priority, ticket.Priority)
+            .Set(t => t.Status, ticket.Status)
+            .Set(t => t.Deadline, ticket.Deadline)
+            .Set(t => t.Description, ticket.Description)
+            .Set(t => t.HandledBy, ticket.HandledBy);
+
+        // Set ReportedBy as ObjectId (not the whole Employee object)
+        if (ticket.ReportedBy != null && !string.IsNullOrEmpty(ticket.ReportedBy.Id))
+        {
+            var reportedByObjectId = new ObjectId(ticket.ReportedBy.Id);
+            update = update.Set("ReportedBy", reportedByObjectId);
+        }
+
+        await _tickets.UpdateOneAsync(t => t.Id == id, update);
     }
     
     public async Task DeleteTicket(string id)
     {
         await _tickets.DeleteOneAsync(t => t.Id == id);
+    }
+
+    public async Task<int> GetTotalTicketsCountAsync()
+    {
+        return (int)await _tickets.CountDocumentsAsync(FilterDefinition<Ticket>.Empty);
+    }
+
+    public async Task<int> GetUnresolvedTicketsCountAsync()
+    {
+        var filter = Builders<Ticket>.Filter.And(
+            Builders<Ticket>.Filter.Ne(t => t.Status, Models.Enums.TicketStatus.Closed),
+            Builders<Ticket>.Filter.Ne(t => t.Status, Models.Enums.TicketStatus.Resolved)
+        );
+        return (int)await _tickets.CountDocumentsAsync(filter);
+    }
+
+    public async Task<int> GetTicketsPastDeadlineCountAsync()
+    {
+        // Use aggregation to get tickets with basic info (no need for ReportedBy population for counting)
+        var pipeline = new[]
+        {
+            new BsonDocument("$project", new BsonDocument
+            {
+                { "Deadline", 1 },
+                { "Status", 1 }
+            })
+        };
+
+        var tickets = await _tickets.Aggregate<BsonDocument>(pipeline).ToListAsync();
+        var today = DateTime.Now;
+
+        int count = 0;
+        foreach (var ticket in tickets)
+        {
+            if (ticket.Contains("Deadline") && !ticket["Deadline"].IsBsonNull)
+            {
+                var deadlineStr = ticket["Deadline"].AsString;
+                if (!string.IsNullOrEmpty(deadlineStr))
+                {
+                    if (DateTime.TryParse(deadlineStr, out DateTime deadline))
+                    {
+                        var status = ticket["Status"].AsString;
+                        if (deadline < today &&
+                            status != "Closed" &&
+                            status != "Resolved")
+                        {
+                            count++;
+                        }
+                    }
+                }
+            }
+        }
+
+        return count;
     }
 }
