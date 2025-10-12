@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using MongoDB.Bson;
 using MongoDB.Driver;
 using NoSQL_Project.Models;
@@ -112,7 +112,11 @@ namespace NoSQL_Project.Controllers
         [HttpGet]
         public IActionResult Create()
         {
-            return View();
+            return View(new Employee
+            {
+                Name = new Name(),
+                ContactInfo = new ContactInfo()
+            });
         }
 
         // POST: /Employee/Create
@@ -124,36 +128,36 @@ namespace NoSQL_Project.Controllers
             {
                 if (employee == null)
                 {
-                    _logger.LogWarning("Create called with null employee");
                     ModelState.AddModelError("", "Employee data is required.");
                     return View(employee);
                 }
 
-                if (!ModelState.IsValid)
-                {
-                    _logger.LogWarning("Invalid model state for employee creation");
-                    return View(employee);
-                }
+                // اطمینان از نال نبودن ساب‌اُبجکت‌ها
+                employee.Name ??= new Name();
+                employee.ContactInfo ??= new ContactInfo();
 
-                _logger.LogInformation("Creating new employee: {EmployeeId}", employee.EmployeeId);
+                if (!ModelState.IsValid) return View(employee);
+
+                // نرمال‌سازی ایمیل
+                if (!string.IsNullOrWhiteSpace(employee.ContactInfo.Email))
+                    employee.ContactInfo.Email = employee.ContactInfo.Email.Trim().ToLowerInvariant();
+
                 await _employeeService.CreateEmployeeAsync(employee);
-
                 TempData["Success"] = "Employee created successfully!";
                 return RedirectToAction(nameof(Index));
             }
-            catch (MongoException ex)
+            catch (MongoException)
             {
-                _logger.LogError(ex, "Database error while creating employee");
                 ModelState.AddModelError("", "Unable to create employee. Please try again later.");
                 return View(employee);
             }
-            catch (Exception ex)
+            catch
             {
-                _logger.LogError(ex, "Unexpected error while creating employee");
                 ModelState.AddModelError("", "An unexpected error occurred.");
                 return View(employee);
             }
         }
+
 
         // GET: /Employee/Edit/{id}
         [HttpGet]
@@ -205,54 +209,48 @@ namespace NoSQL_Project.Controllers
         // POST: /Employee/Edit
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(Employee employee)
+        public async Task<IActionResult> Edit(string id, Employee employee)
         {
             try
             {
-                if (employee == null)
-                {
-                    _logger.LogWarning("Edit POST called with null employee");
-                    TempData["Error"] = "Employee data is required.";
-                    return RedirectToAction(nameof(Index));
-                }
+                if (string.IsNullOrWhiteSpace(employee?.Id))
+                    employee.Id = id;
 
-                if (string.IsNullOrEmpty(employee.Id))
+                if (string.IsNullOrWhiteSpace(employee.Id) || !ObjectId.TryParse(employee.Id, out _))
                 {
-                    _logger.LogWarning("Edit POST called with null or empty employee ID");
-                    ModelState.AddModelError("", "Employee ID is required.");
+                    ModelState.AddModelError("", "Invalid employee ID.");
                     return View(employee);
                 }
 
-                // Validate ObjectId format
-                if (!ObjectId.TryParse(employee.Id, out _))
+                employee.Name ??= new Name();
+                employee.ContactInfo ??= new ContactInfo();
+                ModelState.Remove("ReportedTickets"); // اگه در مدل هست
+
+                if (!ModelState.IsValid) return View(employee);
+
+                if (!string.IsNullOrWhiteSpace(employee.ContactInfo.Email))
+                    employee.ContactInfo.Email = employee.ContactInfo.Email.Trim().ToLowerInvariant();
+
+                var ok = await _employeeService.UpdateEmployeeAsync(employee);   // ← حالا bool
+                if (!ok)
                 {
-                    _logger.LogWarning("Invalid employee ID format in edit: {EmployeeId}", employee.Id);
-                    ModelState.AddModelError("", "Invalid employee ID format.");
+                    ModelState.AddModelError("", "Update failed or employee not found.");
                     return View(employee);
                 }
-
-                if (!ModelState.IsValid)
-                {
-                    _logger.LogWarning("Invalid model state for employee edit: {EmployeeId}", employee.Id);
-                    return View(employee);
-                }
-
-                _logger.LogInformation("Updating employee: {EmployeeId}", employee.Id);
-                await _employeeService.UpdateEmployeeAsync(employee);
 
                 TempData["Success"] = "Employee updated successfully!";
                 return RedirectToAction(nameof(Index));
             }
             catch (MongoException ex)
             {
-                _logger.LogError(ex, "Database error while updating employee {EmployeeId}", employee?.Id);
-                ModelState.AddModelError("", "Unable to update employee. Please try again later.");
+                _logger.LogError(ex, "DB error while updating employee {Id}", employee?.Id);
+                ModelState.AddModelError("", "Database error. Please try again later.");
                 return View(employee);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Unexpected error while updating employee {EmployeeId}", employee?.Id);
-                ModelState.AddModelError("", "An unexpected error occurred.");
+                _logger.LogError(ex, "Unexpected error while updating employee {Id}", employee?.Id);
+                ModelState.AddModelError("", "Unexpected error occurred.");
                 return View(employee);
             }
         }

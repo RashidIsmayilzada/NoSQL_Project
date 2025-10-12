@@ -1,4 +1,4 @@
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using NoSQL_Project.Models;
 using NoSQL_Project.Services.Interfaces;
@@ -15,20 +15,26 @@ public class HomeController : Controller
         _logger = logger;
         _ticketService = ticketService;
     }
-
-    public async Task<IActionResult> Index()
+    [HttpGet]
+    public IActionResult Index()
     {
-        var stats = await _ticketService.GetDashboardStatisticsAsync();
-
-        var viewModel = new DashboardViewModel
-        {
-            TotalTickets = stats.total,
-            UnresolvedTickets = stats.unresolved,
-            TicketsPastDeadline = stats.pastDeadline
-        };
-
-        return View(viewModel);
+        return View(); // Views/Home/Index.cshtml (بدون مدل)
     }
+
+    /* public async Task<IActionResult> Index()
+     {
+         var stats = await _ticketService.GetDashboardStatisticsAsync();
+
+         var viewModel = new DashboardViewModel
+         {
+             TotalTickets = stats.total,
+             UnresolvedTickets = stats.unresolved,
+             TicketsPastDeadline = stats.pastDeadline
+         };
+
+         return View(viewModel);
+     } */
+
 
     public IActionResult Privacy()
     {

@@ -1,6 +1,7 @@
-using MongoDB.Bson;
+﻿using MongoDB.Bson;
 using MongoDB.Driver;
 using NoSQL_Project.Models;
+using NoSQL_Project.Models.Enums;
 using NoSQL_Project.Repositories.Interfaces;
 
 namespace NoSQL_Project.Repositories;
@@ -51,7 +52,7 @@ public class TicketRepository : ITicketRepository
 
         return await _tickets.Aggregate<Ticket>(pipeline).ToListAsync();
     }
-    
+
     public async Task<Ticket> GetTicketById(string id)
     {
         // Use aggregation pipeline for single ticket
@@ -92,12 +93,12 @@ public class TicketRepository : ITicketRepository
 
         return await _tickets.Aggregate<Ticket>(pipeline).FirstOrDefaultAsync();
     }
-    
+
     public async Task CreateTicket(Ticket ticket)
     {
         await _tickets.InsertOneAsync(ticket);
     }
-    
+
     public async Task UpdateTicket(string id, Ticket ticket)
     {
         // Create a BsonDocument to update, storing only the Employee ID in ReportedBy field
@@ -120,7 +121,7 @@ public class TicketRepository : ITicketRepository
 
         await _tickets.UpdateOneAsync(t => t.Id == id, update);
     }
-    
+
     public async Task DeleteTicket(string id)
     {
         await _tickets.DeleteOneAsync(t => t.Id == id);
@@ -179,4 +180,68 @@ public class TicketRepository : ITicketRepository
 
         return count;
     }
+    // آمار وضعیت‌ها برای داشبورد (همه‌ی تیکت‌ها یا فقط تیکت‌های یک کارمند)
+    // خروجی: map از Status به Count
+    public async Task<Dictionary<string, int>> GetStatusCountsAsync(string? reportedByEmployeeObjectId = null)
+    {
+        var match = reportedByEmployeeObjectId == null
+            ? FilterDefinition<Ticket>.Empty
+            : Builders<Ticket>.Filter.Eq("ReportedBy", new ObjectId(reportedByEmployeeObjectId));
+
+        var matchStage = new BsonDocument
+    {
+        { "$match", match.ToBsonDocument() }
+    };
+
+        var groupStage = new BsonDocument
+    {
+        { "$group", new BsonDocument
+            {
+                { "_id", "$Status" },
+                { "count", new BsonDocument("$sum", 1) }
+            }
+        }
+    };
+
+        var pipeline = new[] { matchStage, groupStage };
+
+        var docs = await _tickets.Aggregate<BsonDocument>(pipeline).ToListAsync();
+
+        var dict = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+        foreach (var d in docs)
+        {
+            var key = d["_id"].IsBsonNull ? "" : d["_id"].AsString;
+            var val = d["count"].ToInt32();
+            dict[key] = val;
+        }
+        return dict;
+    }
+   /* public async Task<(int Total, int Open, int Resolved, int Closed)>
+        GetDashboardCountsAsync(string? reportedByEmployeeObjectId)
+    {
+        var baseFilter = FilterDefinition<Ticket>.Empty;
+
+        // اگر داشبورد شخصی (My dashboard) خواستی:
+        if (!string.IsNullOrWhiteSpace(reportedByEmployeeObjectId))
+        {
+            var byMe = Builders<Ticket>.Filter.Eq("ReportedBy", new MongoDB.Bson.ObjectId(reportedByEmployeeObjectId));
+            baseFilter = byMe;
+        }
+
+        // Unresolved = Open + InProgress + OnHold
+        var unresolvedFilter = Builders<Ticket>.Filter.In<Ticket, TicketStatus>(
+            t => t.Status, new[] { TicketStatus.Open, TicketStatus.InProgress, TicketStatus.OnHold });
+
+        var resolvedFilter = Builders<Ticket>.Filter.Eq<Ticket, TicketStatus>(t => t.Status, TicketStatus.Resolved);
+        var closedFilter = Builders<Ticket>.Filter.Eq<Ticket, TicketStatus>(t => t.Status, TicketStatus.Closed);
+
+        // countها
+        var total = (int)await _tickets.CountDocumentsAsync(baseFilter);
+        var open = (int)await _tickets.CountDocumentsAsync(Builders<Ticket>.Filter.And(baseFilter, unresolvedFilter));
+        var resolved = (int)await _tickets.CountDocumentsAsync(Builders<Ticket>.Filter.And(baseFilter, resolvedFilter));
+        var closed = (int)await _tickets.CountDocumentsAsync(Builders<Ticket>.Filter.And(baseFilter, closedFilter));
+
+        return (total, open, resolved, closed);
+    } */
 }
+

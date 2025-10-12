@@ -2,14 +2,15 @@
 
 namespace NoSQL_Project.Repositories.Interfaces
 {
+    
     public interface IEmployeeRepository
     {
         Task<List<Employee>> GetAllEmployees();
-        Task<List<Employee>> GetEmployeesWithTicket();
         Task<Employee> GetEmployeeById(string? id);
         Task CreateEmployee(Employee employee);
-        Task UpdateEmployee(Employee employee);
+        Task<bool> UpdateEmployee(Employee employee);   // ← تغییر
         Task DeleteEmployee(string? id);
-
+        Task<List<Employee>> GetEmployeesWithTicket();
     }
+
 }

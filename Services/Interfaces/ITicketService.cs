@@ -10,5 +10,7 @@ public interface ITicketService
     Task UpdateTicketAsync(string id, Ticket ticket);
     Task DeleteTicketAsync(string id);
     Task AssignTicketAsync(string id, Ticket ticket);
-    Task<(int total, int unresolved, int pastDeadline)> GetDashboardStatisticsAsync();
+    //  Task<(int total, int unresolved, int pastDeadline)> GetDashboardStatisticsAsync();
+
+    Task<DashboardViewModel> GetDashboardAsync(string? reportedByEmployeeObjectId = null);
 }

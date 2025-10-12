@@ -1,0 +1,66 @@
+﻿@model NoSQL_Project.Models.Ticket
+@using NoSQL_Project.Models.Enums
+
+@{
+    ViewData["Title"] = "Create Ticket";
+}
+
+<h2>Create new incident ticket</h2>
+<hr />
+
+<form asp-action="Create" method="post">
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+    <div class="mb-3">
+        <label class="form-label">Date/time reported</label>
+        <input class="form-control" value="@DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm")" disabled />
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Title" class="form-label">Subject of incident</label>
+        <input asp-for="Title" class="form-control" />
+        <span asp-validation-for="Title" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Type" class="form-label">Type of incident</label>
+        <select asp-for="Type" class="form-select" asp-items="Html.GetEnumSelectList<TicketType>()">
+            <option value="">-- Select Type --</option>
+        </select>
+        <span asp-validation-for="Type" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Priority" class="form-label">Priority</label>
+        <select asp-for="Priority" class="form-select" asp-items="Html.GetEnumSelectList<TicketPriority>()">
+            <option value="">-- Select Priority --</option>
+        </select>
+        <span asp-validation-for="Priority" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Deadline" class="form-label">Deadline / follow-up</label>
+        <select asp-for="Deadline" class="form-select">
+            <option>1 day</option>
+            <option>3 days</option>
+            <option selected>7 days</option>
+            <option>14 days</option>
+        </select>
+        <span asp-validation-for="Deadline" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Description" class="form-label">Description</label>
+        <textarea asp-for="Description" class="form-control" rows="5"></textarea>
+        <span asp-validation-for="Description" class="text-danger"></span>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Submit ticket</button>
+    <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+</form>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

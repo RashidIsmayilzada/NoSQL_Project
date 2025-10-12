@@ -1,0 +1,88 @@
+﻿@model NoSQL_Project.Models.DashboardViewModel
+@{
+    ViewData["Title"] = "Dashboard";
+}
+
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0">Current incidents</h2>
+        <a asp-controller="Ticket" asp-action="Index" class="btn btn-primary">SHOW LIST</a>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <h5 class="card-title text-muted">Tickets by status</h5>
+                    <canvas id="ticketChart" height="240"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <h5 class="card-title text-muted">Summary</h5>
+                    <ul class="list-group">
+                        <li class="list-group-item d-flex justify-content-between">
+                            Open (not yet solved)
+                            <span class="badge bg-secondary">
+                                @Model.OpenCount (@Model.OpenPct.ToString("0.#")%)
+                            </span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between">
+                            Resolved
+                            <span class="badge bg-success">
+                                @Model.ResolvedCount (@Model.ResolvedPct.ToString("0.#")%)
+                            </span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between">
+                            Closed (no resolve)
+                            <span class="badge bg-danger">
+                                @Model.ClosedWithoutResolveCount (@Model.ClosedWithoutResolvePct.ToString("0.#")%)
+                            </span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between">
+                            Total
+                            <span class="badge bg-dark">@Model.Total</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    (function() {
+        const total = @Model.Total;
+        const open = @Model.OpenCount;
+        const resolved = @Model.ResolvedCount;
+        const closed = @Model.ClosedWithoutResolveCount;
+
+        const data = total === 0 ? [1, 0, 0] : [open, resolved, closed]; // جلوگیری از NaN و نمایش یک حلقه خالی
+
+        const ctx = document.getElementById('ticketChart');
+        new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Open', 'Resolved', 'Closed (no resolve)'],
+                datasets: [{
+                    data: data,
+                    // رنگ‌ها سلیقه‌ای؛ می‌تونی عوض کنی
+                    backgroundColor: ['#36A2EB', '#4BC0C0', '#FF6384'],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                cutout: '60%',
+                plugins: {
+                    legend: { position: 'bottom' },
+                    tooltip: { enabled: true }
+                }
+            }
+        });
+    })();
+</script>

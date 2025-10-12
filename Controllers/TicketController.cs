@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using MongoDB.Bson;
 using MongoDB.Driver;
 using NoSQL_Project.Models;
@@ -89,10 +89,67 @@ namespace NoSQL_Project.Controllers
         }
 
         // GET: /Ticket/Create
+        /*   [HttpGet]
+           public IActionResult Create()
+           {
+               return View();
+           }
+
+           // POST: /Ticket/Create
+           [HttpPost]
+           [ValidateAntiForgeryToken]
+           public async Task<IActionResult> Create(Ticket ticket)
+           {
+               try
+               {
+                   if (ticket == null)
+                   {
+                       _logger.LogWarning("Create called with null ticket");
+                       ModelState.AddModelError("", "Ticket data is required.");
+                       return View(ticket);
+                   }
+
+                   if (!ModelState.IsValid)
+                   {
+                       _logger.LogWarning("Invalid model state for ticket creation");
+                       return View(ticket);
+                   }
+
+                   _logger.LogInformation("Creating new ticket: {TicketId}", ticket.TicketId);
+                   await _ticketService.CreateTicketAsync(ticket);
+
+                   TempData["Success"] = "Ticket created successfully!";
+                   return RedirectToAction(nameof(Index));
+               }
+               catch (MongoException ex)
+               {
+                   _logger.LogError(ex, "Database error while creating ticket");
+                   ModelState.AddModelError("", "Unable to create ticket. Please try again later.");
+                   return View(ticket);
+               }
+               catch (Exception ex)
+               {
+                   _logger.LogError(ex, "Unexpected error while creating ticket");
+                   ModelState.AddModelError("", "An unexpected error occurred.");
+                   return View(ticket);
+               }
+           } */
+        // GET: /Ticket/Create
+        [HttpGet]
+        // GET: /Ticket/Create
         [HttpGet]
         public IActionResult Create()
         {
-            return View();
+            var model = new Ticket
+            {
+                Status = NoSQL_Project.Models.Enums.TicketStatus.Open, // شروع همه تیکت‌ها Open
+                Priority = NoSQL_Project.Models.Enums.TicketPriority.Medium,
+
+                Deadline = "7 days",                   // مطابق وایرفریم
+                HandledBy = new List<HandlingInfo>()   // جلوگیری از null
+                                                       // ReportedBy را فعلاً از فرم نمی‌گیریم (بعداً از کاربر لاگین‌شده ست می‌کنیم)
+            };
+            return View(model);
         }
 
         // POST: /Ticket/Create
@@ -109,13 +166,35 @@ namespace NoSQL_Project.Controllers
                     return View(ticket);
                 }
 
+                // فیلدهایی که از فرم بایند نمی‌شن را از ModelState حذف کن
+                ModelState.Remove("ReportedBy");
+                ModelState.Remove("HandledBy[*].Employee"); // چون [BsonIgnore] است و در فرم نمی‌آید
+
                 if (!ModelState.IsValid)
                 {
                     _logger.LogWarning("Invalid model state for ticket creation");
                     return View(ticket);
                 }
 
-                _logger.LogInformation("Creating new ticket: {TicketId}", ticket.TicketId);
+                // مقداردهی مطمئن قبل از ذخیره
+                ticket.Id = null; // اجازه بده Mongo ObjectId بسازد
+
+                if (string.IsNullOrWhiteSpace(ticket.TicketId))
+                    ticket.TicketId = MongoDB.Bson.ObjectId.GenerateNewId().ToString();
+
+                // Trim رشته‌ها
+                ticket.Title = ticket.Title?.Trim() ?? "";
+                ticket.Description = ticket.Description?.Trim() ?? "";
+                // Type و Priority چون Enum هستند نیازی به Trim ندارند
+                ticket.Deadline = ticket.Deadline?.Trim() ?? "7 days";
+
+                // وضعیت پیش‌فرض
+                ticket.Status = NoSQL_Project.Models.Enums.TicketStatus.Open;
+
+                // لیست‌ها نال نباشند
+                ticket.HandledBy ??= new List<HandlingInfo>();
+
+                _logger.LogInformation("Creating new ticket (title: {Title})", ticket.Title);
                 await _ticketService.CreateTicketAsync(ticket);
 
                 TempData["Success"] = "Ticket created successfully!";
@@ -135,130 +214,98 @@ namespace NoSQL_Project.Controllers
             }
         }
 
+
         // GET: /Ticket/Edit/{id}
         [HttpGet]
         public async Task<IActionResult> Edit(string id)
         {
             try
             {
-                if (string.IsNullOrEmpty(id))
+                if (string.IsNullOrWhiteSpace(id))
                 {
-                    _logger.LogWarning("Edit called with null or empty ID");
                     TempData["Error"] = "Ticket ID is required.";
                     return RedirectToAction(nameof(Index));
                 }
 
-                // Validate ObjectId format
                 if (!ObjectId.TryParse(id, out _))
                 {
-                    _logger.LogWarning("Invalid ticket ID format: {TicketId}", id);
                     TempData["Error"] = "Invalid ticket ID format.";
                     return RedirectToAction(nameof(Index));
                 }
 
-                _logger.LogInformation("Loading ticket for edit: {TicketId}", id);
                 var ticket = await _ticketService.GetTicketByIdAsync(id);
-
                 if (ticket == null)
                 {
-                    _logger.LogWarning("Ticket not found for edit with ID: {TicketId}", id);
                     TempData["Error"] = $"Ticket with ID {id} not found.";
                     return RedirectToAction(nameof(Index));
                 }
 
+                // اطمینان از نال نبودن لیست‌ها
+                ticket.HandledBy ??= new List<HandlingInfo>();
                 return View(ticket);
             }
-            catch (MongoException ex)
+            catch (MongoException)
             {
-                _logger.LogError(ex, "Database error while loading ticket for edit {TicketId}", id);
                 TempData["Error"] = "Unable to load ticket. Please try again later.";
                 return RedirectToAction(nameof(Index));
             }
-            catch (Exception ex)
+            catch
             {
-                _logger.LogError(ex, "Unexpected error while loading ticket for edit {TicketId}", id);
                 TempData["Error"] = "An unexpected error occurred.";
                 return RedirectToAction(nameof(Index));
             }
         }
 
-        // POST: /Ticket/Edit
+        // POST: /Ticket/Edit/{id}
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(Ticket ticket, string reportedById)
+        public async Task<IActionResult> Edit(string id, Ticket ticket, string? reportedById) // ← حتماً ? داشته باشه
         {
             try
             {
-                if (ticket == null)
-                {
-                    _logger.LogWarning("Edit POST called with null ticket");
-                    TempData["Error"] = "Ticket data is required.";
-                    return RedirectToAction(nameof(Index));
-                }
+                // اگر از فرم نیامد، از route ست می‌کنیم
+                if (string.IsNullOrWhiteSpace(ticket?.Id))
+                    ticket.Id = id;
 
-                if (string.IsNullOrEmpty(ticket.Id))
+                if (string.IsNullOrWhiteSpace(ticket.Id) || !ObjectId.TryParse(ticket.Id, out _))
                 {
-                    _logger.LogWarning("Edit POST called with null or empty ticket ID");
-                    ModelState.AddModelError("", "Ticket ID is required.");
+                    ModelState.AddModelError("", "Invalid ticket ID.");
                     return View(ticket);
                 }
 
-                // Validate ObjectId format
-                if (!ObjectId.TryParse(ticket.Id, out _))
-                {
-                    _logger.LogWarning("Invalid ticket ID format in edit: {TicketId}", ticket.Id);
-                    ModelState.AddModelError("", "Invalid ticket ID format.");
-                    return View(ticket);
-                }
-
-                // Remove ModelState errors for ReportedBy since it's not bound from the form
+                // فیلدهایی که توی فرم بایند نمی‌شوند را از ModelState حذف کن
                 ModelState.Remove("ReportedBy");
-
-                // Remove ModelState errors for HandledBy Employee objects since they're not bound from the form
-                // The Employee property in HandlingInfo is marked with [BsonIgnore] and is only populated during reads
-                var handledByKeys = ModelState.Keys.Where(k => k.StartsWith("HandledBy[") && k.Contains(".Employee")).ToList();
-                foreach (var key in handledByKeys)
-                {
-                    ModelState.Remove(key);
-                }
+                var handledByKeys = ModelState.Keys
+                    .Where(k => k.StartsWith("HandledBy[") && k.EndsWith(".Employee"))
+                    .ToList();
+                foreach (var k in handledByKeys) ModelState.Remove(k);
 
                 if (!ModelState.IsValid)
-                {
-                    _logger.LogWarning("Invalid model state for ticket edit: {TicketId}", ticket.Id);
                     return View(ticket);
-                }
 
-                // Preserve the ReportedBy employee ID
-                if (!string.IsNullOrEmpty(reportedById))
-                {
+                // اگر مقدار گزارش‌دهنده رسید، نگهش داریم
+                if (!string.IsNullOrWhiteSpace(reportedById))
                     ticket.ReportedBy = new Employee { Id = reportedById };
-                }
 
-                // Ensure HandledBy list is initialized
-                if (ticket.HandledBy == null)
-                {
-                    ticket.HandledBy = new List<HandlingInfo>();
-                }
+                ticket.HandledBy ??= new List<HandlingInfo>();
 
-                _logger.LogInformation("Updating ticket: {TicketId}", ticket.Id);
                 await _ticketService.UpdateTicketAsync(ticket.Id, ticket);
 
                 TempData["Success"] = "Ticket updated successfully!";
-                return RedirectToAction(nameof(Index));
+                return RedirectToAction(nameof(Index)); // ✅ بعد از موفقیت برگرد به لیست
             }
-            catch (MongoException ex)
+            catch (MongoException)
             {
-                _logger.LogError(ex, "Database error while updating ticket {TicketId}", ticket?.Id);
-                ModelState.AddModelError("", "Unable to update ticket. Please try again later.");
+                ModelState.AddModelError("", "Database error. Please try again later.");
                 return View(ticket);
             }
-            catch (Exception ex)
+            catch
             {
-                _logger.LogError(ex, "Unexpected error while updating ticket {TicketId}", ticket?.Id);
-                ModelState.AddModelError("", "An unexpected error occurred.");
+                ModelState.AddModelError("", "Unexpected error occurred.");
                 return View(ticket);
             }
         }
+
 
         // GET: /Ticket/Delete/{id}
         [HttpGet]

@@ -46,11 +46,15 @@ namespace NoSQL_Project.Repositories
         {
             await _employees.InsertOneAsync(employee);
         }
-        
-        public async Task UpdateEmployee(Employee employee)
+
+
+        public async Task<bool> UpdateEmployee(Employee employee)
         {
-            await _employees.ReplaceOneAsync(emp => emp.Id == employee.Id, employee);
+            var filter = Builders<Employee>.Filter.Eq(e => e.Id, employee.Id);
+            var result = await _employees.ReplaceOneAsync(filter, employee);
+            return result.IsAcknowledged && result.MatchedCount == 1;
         }
+
 
         public async Task DeleteEmployee(string? id)
         {

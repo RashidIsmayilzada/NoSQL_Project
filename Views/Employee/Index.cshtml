@@ -1,4 +1,4 @@
-﻿@model IEnumerable<Employee>
+﻿@model IEnumerable<NoSQL_Project.Models.Employee>
 
 @{
     ViewData["Title"] = "Employee List";
@@ -9,56 +9,42 @@
 <p>
     <a class="btn btn-primary" asp-action="Create">Create New</a>
 </p>
+
 <div class="table-responsive border border-dark rounded-3 p-1 mh-75 overfl">
-<table class="table table-responsive">
-    <thead>
-        <tr class="text-primary">
-                <th>
-                    @Html.DisplayNameFor(model => model.EmployeeId)
-                </th>
-                <th>
-                    @Html.DisplayNameFor(model => model.ContactInfo.Email)
-                </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Name.FirstName)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Name.LastName)
-            </th>
-              <th>
-                    @Html.DisplayNameFor(model => model.Role)
-             </th>
-             <th>
-                 #Tickets
-             </th>
-            <th>Actions</th>
-        </tr>
-    </thead>
-    <tbody>
-@foreach (var item in Model) {
-        <tr>
+    <table class="table table-responsive">
+        <thead>
+            <tr class="text-primary">
+                <th>@Html.DisplayNameFor(m => m.EmployeeId)</th>
+                <th>@Html.DisplayNameFor(m => m.ContactInfo.Email)</th>
+                <th>@Html.DisplayNameFor(m => m.Name.FirstName)</th>
+                <th>@Html.DisplayNameFor(m => m.Name.LastName)</th>
+                <th>@Html.DisplayNameFor(m => m.Role)</th>
+                <th>#Tickets</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td>@item.EmployeeId</td>
+                    <td>@item.ContactInfo?.Email</td>
+                    <td>@item.Name?.FirstName</td>
+                    <td>@item.Name?.LastName</td>
+                    <td>@item.Role</td>
+                    <td>@(item.ReportedTickets?.Count ?? 0)</td>
                     <td>
-                        @Html.DisplayFor(modelItem => item.EmployeeId)
+                        <a class="btn btn-warning btn-sm"
+                           asp-action="Edit" asp-route-id="@item.Id">Edit</a>
+
+                        <a class="btn btn-danger btn-sm"
+                           asp-action="Delete" asp-route-id="@item.Id">Delete</a>
+
+                        <a class="btn btn-secondary btn-sm"
+                           asp-action="Details" asp-route-id="@item.Id">Details</a>
                     </td>
-                    <td>
-                        @Html.DisplayFor(modelItem => item.ContactInfo.Email)
-                    </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Name.FirstName)
-            </td>
-                    <td>
-                        @Html.DisplayFor(modelItem => item.Name.LastName)
-                    </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Role)
-            </td>
-                    <td>@item.ReportedTickets.Count</td>
-            <td>
-                <a class="btn btn-warning btn-sm" href="@Url.Action("Edit", "Employee", new { /*id = item.Id*/ })">Edit</a>
-                        <a class="btn btn-danger btn-sm" href="@Url.Action("Delete", "Employee", new { /*id = item.Id*/ })">Delete</a>
-            </td>
-        </tr>
-}
-    </tbody>
-</table>
+                </tr>
+            }
+        </tbody>
+    </table>
 </div>

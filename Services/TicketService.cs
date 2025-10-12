@@ -43,14 +43,40 @@ public class TicketService : ITicketService
         await _ticketRepository.UpdateTicket(id, ticket);
     }
 
-    public async Task<(int total, int unresolved, int pastDeadline)> GetDashboardStatisticsAsync()
+    /*  public async Task<(int total, int unresolved, int pastDeadline)> GetDashboardStatisticsAsync()
+      {
+          var totalTask = _ticketRepository.GetTotalTicketsCountAsync();
+          var unresolvedTask = _ticketRepository.GetUnresolvedTicketsCountAsync();
+          var pastDeadlineTask = _ticketRepository.GetTicketsPastDeadlineCountAsync();
+
+          await Task.WhenAll(totalTask, unresolvedTask, pastDeadlineTask);
+
+          return (totalTask.Result, unresolvedTask.Result, pastDeadlineTask.Result);
+      } */
+    public async Task<DashboardViewModel> GetDashboardAsync(string? reportedByEmployeeObjectId = null)
     {
-        var totalTask = _ticketRepository.GetTotalTicketsCountAsync();
-        var unresolvedTask = _ticketRepository.GetUnresolvedTicketsCountAsync();
-        var pastDeadlineTask = _ticketRepository.GetTicketsPastDeadlineCountAsync();
+        var counts = await _ticketRepository.GetStatusCountsAsync(reportedByEmployeeObjectId);
 
-        await Task.WhenAll(totalTask, unresolvedTask, pastDeadlineTask);
+        int open = 0, resolved = 0, closed = 0;
 
-        return (totalTask.Result, unresolvedTask.Result, pastDeadlineTask.Result);
+        foreach (var kv in counts)
+        {
+            var status = kv.Key.ToLower();
+            if (status == "open" || status == "inprogress" || status == "onhold")
+                open += kv.Value;
+            else if (status == "resolved")
+                resolved += kv.Value;
+            else if (status == "closed")
+                closed += kv.Value;
+        }
+
+        return new DashboardViewModel
+        {
+            Total = open + resolved + closed,
+            OpenCount = open,
+            ResolvedCount = resolved,
+            ClosedWithoutResolveCount = closed
+        };
     }
+
 }

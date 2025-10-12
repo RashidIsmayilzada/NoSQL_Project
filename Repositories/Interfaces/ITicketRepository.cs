@@ -12,4 +12,6 @@ public interface ITicketRepository
     Task<int> GetTotalTicketsCountAsync();
     Task<int> GetUnresolvedTicketsCountAsync();
     Task<int> GetTicketsPastDeadlineCountAsync();
+    Task<Dictionary<string, int>> GetStatusCountsAsync(string? reportedByEmployeeObjectId = null);
+   // Task<(int Total, int Open, int Resolved, int Closed)> GetDashboardCountsAsync(string? reportedByEmployeeObjectId);
 }
