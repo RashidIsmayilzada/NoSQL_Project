@@ -28,7 +28,6 @@ main {
     max-width: 100%;
     max-height: none;
     overflow: visible;
-    padding: 10px;
     box-sizing: border-box;
 }
 

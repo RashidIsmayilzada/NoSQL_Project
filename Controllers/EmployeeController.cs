@@ -8,7 +8,7 @@ namespace NoSQL_Project.Controllers
 {
     
     public class EmployeeController(IEmployeeService employeeService, ILogger<EmployeeController> logger)
-        : BaseLoggedInController
+        : Controller
     {
         private readonly IEmployeeService _employeeService = employeeService;
         private readonly ILogger<EmployeeController> _logger = logger;
@@ -135,7 +135,7 @@ namespace NoSQL_Project.Controllers
                     return View(employee);
                 }
 
-                _logger.LogInformation("Creating new employee: {EmployeeId}", employee.EmployeeId);
+                _logger.LogInformation("Creating new employee: {EmployeeId}", employee.Id);
                 await _employeeService.CreateEmployeeAsync(employee);
 
                 TempData["Success"] = "Employee created successfully!";
