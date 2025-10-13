@@ -48,6 +48,11 @@ namespace NoSQL_Project.Models
 
         [BsonElement("LastName")]
         public string LastName { get; set; } = "";
+
+        public override string ToString()
+        {
+            return FirstName + ' ' + LastName;
+        }
     }
 
     public class ContactInfo
