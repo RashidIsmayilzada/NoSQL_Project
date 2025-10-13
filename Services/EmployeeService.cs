@@ -43,21 +43,52 @@ namespace NoSQL_Project.Services
             return await _employeeRepository.GetEmployeesWithTicket();
         }
 
-        public async Task<Employee> GetEmployeeByLoginCredentialsAsync(string email, string password)
+        public async Task<Employee?> GetEmployeeByLoginCredentialsAsync(string email, string password)
         {
-            string passwordHashed = HashPassword(password);
+            var emp = await _employeeRepository.GetEmployeeByEmail(email);
+            if (emp is null)
+                return null;
 
-            return await _employeeRepository.GetEmployeeByLoginCredentials(email, passwordHashed);
+            // Check if employee is disabled
+            if (emp.IsDisabled)
+                return null;
+
+            // decode stored salt
+            byte[] saltBytes = Convert.FromBase64String(emp.Salt);
+
+            // re-hash entered password with stored salt
+            string enteredHash = HashPassword(password, saltBytes);
+
+            // compare safely
+            return enteredHash == emp.Password ? emp : null;
         }
 
         // Hash password with SHA-256
-        private string HashPassword(string password)
+        private string HashPassword(string password, byte[] salt)
         {
             using (SHA256 sha256 = SHA256.Create())
             {
-                byte[] hashBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(password));
+                // Combine password + salt
+                byte[] passwordBytes = Encoding.UTF8.GetBytes(password);
+                byte[] combined = new byte[passwordBytes.Length + salt.Length];
+
+                Buffer.BlockCopy(passwordBytes, 0, combined, 0, passwordBytes.Length);
+                Buffer.BlockCopy(salt, 0, combined, passwordBytes.Length, salt.Length);
+
+                byte[] hashBytes = sha256.ComputeHash(combined);
                 return Convert.ToBase64String(hashBytes);
             }
+        }
+
+        private static byte[] GenerateSalt(int size = 16)
+        {
+            // size = number of bytes (16 = 128 bits, which is standard)
+            byte[] salt = new byte[size];
+            using (var rng = RandomNumberGenerator.Create())
+            {
+                rng.GetBytes(salt);
+            }
+            return salt;
         }
     }
 }

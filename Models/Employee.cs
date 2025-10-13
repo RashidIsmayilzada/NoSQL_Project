@@ -13,9 +13,8 @@ namespace NoSQL_Project.Models
         [BsonId]
         [BsonRepresentation(BsonType.ObjectId)]
         public string? Id { get; set; }
-
-        [BsonElement("EmployeeId")]
-        public int EmployeeId { get; set; }
+        [BsonElement("IsDisabled")]
+        public bool IsDisabled { get; set; } = false;
 
         [BsonElement("Name")]
         [JsonPropertyName("Name")]
@@ -26,13 +25,21 @@ namespace NoSQL_Project.Models
         [JsonPropertyName("Role")]
         public RoleType Role { get; set; }
 
+        [BsonElement("Password")]
+        [BsonRepresentation(BsonType.String)]
+        public string Password { get; set; } = "";
+
+        [BsonElement("Salt")]
+        [BsonRepresentation(BsonType.String)]
+        public string Salt { get; set; } = "";
+
         [BsonElement("contactInfo")]
         [JsonPropertyName("contactInfo")]
         public ContactInfo ContactInfo { get; set; }
 
         [BsonElement("ReportedTickets")]
         [BsonIgnoreIfNull]
-        public List<Ticket> ReportedTickets { get; set; } = new();
+        public List<Ticket> ReportedTickets { get; set; }
 
         public Employee()
         {

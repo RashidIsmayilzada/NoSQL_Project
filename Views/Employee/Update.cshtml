@@ -2,68 +2,119 @@
 @model NoSQL_Project.Models.Employee
 
 @{
-    ViewData["Title"] = "Update";
+    ViewData["Title"] = "Update Employee";
 }
-<div>
-    <a class="btn btn-secondary mb-3" asp-action="Index">Back to List</a>
-</div>
-<div class="d-flex flex-column">
-<h1>Update Employee</h1>
-<div class="border border-dark rounded-3 p-1">
-    <div class="col-md-4">
-        <form asp-action="Update" class="d-flex flex-column gap-2">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <div class="form-group">
-                <input asp-for="Id" class="form-control" hidden/>
-            </div>
 
-            <div class="form-group">
-                <label asp-for="EmployeeId" class="control-label"></label>
-                <input asp-for="EmployeeId" class="form-control" />
-                <span asp-validation-for="EmployeeId" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-            <label asp-for="Name.FirstName" class="control-label"></label>
-            <input asp-for="Name.FirstName" class="form-control" />
-            <span asp-validation-for="Name.FirstName" class="text-danger"></span>
+<div class="container-fluid py-3">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="fw-semibold mb-0 text-primary">
+            <i class="bi bi-person-gear me-2"></i> Update Employee
+        </h2>
+        <a asp-action="Index" class="btn btn-secondary">
+            <i class="bi bi-arrow-left me-1"></i> Back to List
+        </a>
     </div>
-            <div class="form-group">
-                <label asp-for="Name.LastName" class="control-label"></label>
-                <input asp-for="Name.LastName" class="form-control" />
-                <span asp-validation-for="Name.LastName" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Role" class="control-label"></label>
-                <select asp-for="Role" asp-items="Html.GetEnumSelectList<RoleType>()" class="form-select">
-                    <option value="">Select Role</option>
-                </select>
-                <span asp-validation-for="Role" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="ContactInfo.Email" class="control-label"></label>
-                <input asp-for="ContactInfo.Email" class="form-control" />
-                <span asp-validation-for="ContactInfo.Email" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="ContactInfo.Phone" class="control-label"></label>
-                <input asp-for="ContactInfo.Phone" class="form-control" />
-                <span asp-validation-for="ContactInfo.Phone" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="ContactInfo.Location" class="control-label"></label>
-                <input asp-for="ContactInfo.Location" class="form-control" />
-                <span asp-validation-for="ContactInfo.Location" class="text-danger"></span>
-            </div>
 
-            <div class="form-group">
-                <input type="submit" value="Save" class="btn btn-primary" />
+    <div class="card shadow-sm border-0 rounded-4">
+        <div class="card-header bg-light d-flex justify-content-between align-items-center">
+            <div class="fw-semibold">
+                @Model.Name?.FirstName @Model.Name?.LastName
+                <span class="ms-2 badge @(Model.Role.ToString()=="ServiceDesk" ? "bg-primary" : "bg-secondary")">
+                    @Model.Role
+                </span>
             </div>
-        </form>
+            <small class="text-muted">ID: @Model.Id</small>
+        </div>
+
+        <div class="card-body">
+            <form asp-action="Update" method="post" novalidate>
+                @Html.AntiForgeryToken()
+                <input asp-for="Id" type="hidden" />
+
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                <!-- Name -->
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="form-floating">
+                            <input asp-for="Name.FirstName" class="form-control" placeholder="First name" />
+                            <label asp-for="Name.FirstName">First name</label>
+                            <span asp-validation-for="Name.FirstName" class="text-danger"></span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-floating">
+                            <input asp-for="Name.LastName" class="form-control" placeholder="Last name" />
+                            <label asp-for="Name.LastName">Last name</label>
+                            <span asp-validation-for="Name.LastName" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Contact -->
+                <div class="row g-3 mt-1">
+                    <div class="col-md-6">
+                        <div class="form-floating">
+                            <input asp-for="ContactInfo.Email" type="email" class="form-control" placeholder="name@example.com" />
+                            <label asp-for="ContactInfo.Email">Email</label>
+                            <span asp-validation-for="ContactInfo.Email" class="text-danger"></span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-floating">
+                            <input asp-for="ContactInfo.Phone" class="form-control" placeholder="Phone" />
+                            <label asp-for="ContactInfo.Phone">Phone</label>
+                            <span asp-validation-for="ContactInfo.Phone" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row g-3 mt-1">
+                    <div class="col-12">
+                        <div class="form-floating">
+                            <input asp-for="ContactInfo.Location" class="form-control" placeholder="Location" />
+                            <label asp-for="ContactInfo.Location">Location</label>
+                            <span asp-validation-for="ContactInfo.Location" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Role + Disabled -->
+                <div class="row g-3 mt-1">
+                    <div class="col-md-6">
+                        <div class="form-floating">
+                            <select asp-for="Role"
+                                    class="form-select"
+                                    asp-items="Html.GetEnumSelectList<RoleType>()">
+                                <option value="">Select role</option>
+                            </select>
+                            <label asp-for="Role">Role</label>
+                            <span asp-validation-for="Role" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6 d-flex align-items-center">
+                        <div class="form-check form-switch ms-1">
+                            <input asp-for="IsDisabled" class="form-check-input" type="checkbox" role="switch" />
+                            <label class="form-check-label" asp-for="IsDisabled">Disabled</label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="d-flex justify-content-end gap-2 mt-4">
+                    <a asp-action="Index" class="btn btn-outline-secondary">Cancel</a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-save me-1"></i> Save
+                    </button>
+                </div>
+            </form>
+        </div>
     </div>
 </div>
-</div>
-
 
 @section Scripts {
-    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
 }

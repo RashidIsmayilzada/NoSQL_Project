@@ -7,7 +7,7 @@ namespace NoSQL_Project.Services.Interfaces
         Task<List<Employee>> GetAllEmployeesAsync();
         Task<List<Employee>> GetEmployeesWithTicketAsync();
         Task<Employee> GetEmployeeByIdAsync(string? id);
-        Task<Employee> GetEmployeeByLoginCredentialsAsync(string email, string password);
+        Task<Employee?> GetEmployeeByLoginCredentialsAsync(string email, string password);
         Task CreateEmployeeAsync(Employee employee);
         Task UpdateEmployeeAsync(Employee employee);
         Task DeleteEmployeeAsync(string? id);

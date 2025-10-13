@@ -6,7 +6,7 @@ using NoSQL_Project.Services.Interfaces;
 
 namespace NoSQL_Project.Controllers
 {
-    public class TicketController : BaseLoggedInController
+    public class TicketController : Controller
     {
         private readonly ITicketService _ticketService;
         private readonly ILogger<TicketController> _logger;

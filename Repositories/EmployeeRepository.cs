@@ -1,4 +1,5 @@
-﻿using MongoDB.Bson;
+﻿using System.Text.RegularExpressions;
+using MongoDB.Bson;
 using MongoDB.Driver;
 using NoSQL_Project.Models;
 using NoSQL_Project.Repositories.Interfaces;
@@ -30,31 +31,26 @@ namespace NoSQL_Project.Repositories
                     { "localField", "_id" },
                     { "foreignField", "ReportedBy" },
                     { "as", "ReportedTickets" }
-                })
+                }),
             };
 
-            var result = await _employees.Aggregate<Employee>(pipeline).ToListAsync();
-            return result;
+            return await _employees.Aggregate<Employee>(pipeline).ToListAsync();
         }
+
 
         public async Task<Employee> GetEmployeeById(string? id)
         {
             return await _employees.Find(emp => emp.Id == id).FirstOrDefaultAsync();
         }
 
-        public async Task<Employee> GetEmployeeByLoginCredentials(string email, string passwordHashed)
+        public async Task<Employee> GetEmployeeByEmail(string email)
         {
-            var pipeline = new[]
-            {
-                new BsonDocument("$match", new BsonDocument
-                {
-                    { "contactInfo.Email", email },
-                    { "Password", passwordHashed }
-                })
-            };
+            var filter = Builders<Employee>.Filter.Regex(
+                e => e.ContactInfo.Email,
+                new BsonRegularExpression($"^{Regex.Escape(email)}$", "i")
+            );
 
-            var result = await _employees.Aggregate<Employee>(pipeline).FirstOrDefaultAsync();
-            return result;
+            return await _employees.Find(filter).FirstOrDefaultAsync();
         }
 
         public async Task CreateEmployee(Employee employee)
