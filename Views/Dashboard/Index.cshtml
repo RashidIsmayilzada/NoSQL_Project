@@ -6,7 +6,6 @@
 <div class="container py-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2 class="mb-0">Current incidents</h2>
-       
         <a asp-controller="Ticket" asp-action="Index" class="btn btn-primary">SHOW LIST</a>
     </div>
 
@@ -52,6 +51,76 @@
             </div>
         </div>
     </div>
+
+    <!-- ===== KPI donuts (Prototype-style) ===== -->
+    <div class="row g-4 mt-4">
+        <!-- Unresolved incidents -->
+        <div class="col-md-6">
+            <div class="card border-warning h-100">
+                <div class="card-body d-flex flex-column align-items-center justify-content-center p-4">
+                    <h6 class="text-muted mb-1">Unresolved incidents</h6>
+                    <p class="text-muted small mb-4">All tickets currently open</p>
+
+                    @{
+                        var totalKpi = Math.Max(Model.Total, 1);        // جلوگیری از تقسیم بر صفر
+                        var unresolvedRatio = (double)Model.OpenCount / totalKpi;
+
+                        var r = 80; var cx = 100; var cy = 100;
+                        var circumference = 2 * Math.PI * r;
+                        var dashOffset = circumference * (1 - unresolvedRatio);
+                    }
+
+                    <div class="position-relative" style="width:200px;height:200px;">
+                        <svg viewBox="0 0 200 200" style="transform: rotate(-90deg);">
+                            <!-- Background -->
+                            <circle cx="@cx" cy="@cy" r="@r" fill="none" stroke="#e0e0e0" stroke-width="20"></circle>
+                            <!-- Progress -->
+                            <circle cx="@cx" cy="@cy" r="@r" fill="none"
+                                    stroke="#ffa726" stroke-width="20"
+                                    stroke-dasharray="@circumference"
+                                    stroke-dashoffset="@dashOffset"
+                                    stroke-linecap="round"></circle>
+                        </svg>
+                        <div class="position-absolute top-50 start-50 translate-middle text-center">
+                            <h2 class="mb-0 fw-bold">@Model.OpenCount/@Model.Total</h2>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Incidents past deadline -->
+        <div class="col-md-6">
+            <div class="card border-danger h-100">
+                <div class="card-body d-flex flex-column align-items-center justify-content-center p-4">
+                    <h6 class="text-muted mb-1">Incidents past deadline</h6>
+                    <p class="text-muted small mb-4">These tickets need your immediate attention</p>
+
+                    @{
+                        var pastRatio = (double)Model.TicketsPastDeadline / totalKpi;
+                        var dashOffset2 = circumference * (1 - pastRatio);
+                    }
+
+                    <div class="position-relative" style="width:200px;height:200px;">
+                        <svg viewBox="0 0 200 200" style="transform: rotate(-90deg);">
+                            <!-- Background -->
+                            <circle cx="@cx" cy="@cy" r="@r" fill="none" stroke="#e0e0e0" stroke-width="20"></circle>
+                            <!-- Progress -->
+                            <circle cx="@cx" cy="@cy" r="@r" fill="none"
+                                    stroke="#e53935" stroke-width="20"
+                                    stroke-dasharray="@circumference"
+                                    stroke-dashoffset="@dashOffset2"
+                                    stroke-linecap="round"></circle>
+                        </svg>
+                        <div class="position-absolute top-50 start-50 translate-middle text-center">
+                            <h2 class="mb-0 fw-bold">@Model.TicketsPastDeadline</h2>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- ===== end KPI donuts ===== -->
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -62,7 +131,7 @@
         const resolved = @Model.ResolvedCount;
         const closed = @Model.ClosedWithoutResolveCount;
 
-        const data = total === 0 ? [1, 0, 0] : [open, resolved, closed]; // جلوگیری از NaN و نمایش یک حلقه خالی
+        const data = total === 0 ? [1, 0, 0] : [open, resolved, closed];
 
         const ctx = document.getElementById('ticketChart');
         new Chart(ctx, {
@@ -71,7 +140,6 @@
                 labels: ['Open', 'Resolved', 'Closed (no resolve)'],
                 datasets: [{
                     data: data,
-                    // رنگ‌ها سلیقه‌ای؛ می‌تونی عوض کنی
                     backgroundColor: ['#36A2EB', '#4BC0C0', '#FF6384'],
                     borderWidth: 0
                 }]

@@ -79,8 +79,8 @@ public class TicketService : ITicketService
             ClosedWithoutResolveCount = closed
         };
     }*/
-   
-      public async Task<DashboardViewModel> GetDashboardAsync(string? reportedByEmployeeObjectId = null)
+
+    public async Task<DashboardViewModel> GetDashboardAsync(string? reportedByEmployeeObjectId = null)
     {
         // روش ساده: همه تیکت‌ها را بگیر و در سرویس بشمار
         var tickets = await _ticketRepository.GetAllTickets();
@@ -103,13 +103,14 @@ public class TicketService : ITicketService
 
         var resolved = tickets.Count(t => t.Status == TicketStatus.Resolved);
         var closed = tickets.Count(t => t.Status == TicketStatus.Closed);
-
+        var pastDeadline = await _ticketRepository.GetTicketsPastDeadlineCountAsync();
         return new DashboardViewModel
         {
             Total = total,
             OpenCount = open,
             ResolvedCount = resolved,
-            ClosedWithoutResolveCount = closed
+            ClosedWithoutResolveCount = closed,
+            TicketsPastDeadline = pastDeadline
         };
     }
 
