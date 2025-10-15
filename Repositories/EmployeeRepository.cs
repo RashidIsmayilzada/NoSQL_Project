@@ -75,6 +75,9 @@ namespace NoSQL_Project.Repositories
 
         public async Task CreateEmployee(Employee employee)
         {
+            // Prevent writing ReportedTickets
+            employee.ReportedTickets = null;
+
             await _employees.InsertOneAsync(employee);
         }
 

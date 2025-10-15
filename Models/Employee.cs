@@ -18,7 +18,7 @@ namespace NoSQL_Project.Models
         public bool IsDisabled { get; set; } = false;
 
         [BsonElement("Name")]
-        public Name Name { get; set; }
+        public Name Name { get; set; } = new Name();
 
         [BsonElement("Role")]
         [BsonRepresentation(BsonType.String)]
@@ -28,17 +28,13 @@ namespace NoSQL_Project.Models
         [BsonRepresentation(BsonType.String)]
         public string PasswordHashed { get; set; } = "";
 
-        [BsonElement("Salt")]
-        [BsonRepresentation(BsonType.String)]
-        public string Salt { get; set; } = "";
-
         [BsonElement("contactInfo")]
         [JsonPropertyName("contactInfo")]
         public ContactInfo ContactInfo { get; set; } = new ContactInfo();
 
         [BsonElement("ReportedTickets")]
         [BsonIgnoreIfNull]
-        public List<Ticket> ReportedTickets { get; set; } = new();
+        public List<Ticket>? ReportedTickets { get; set; } = new();
 
 
     }
