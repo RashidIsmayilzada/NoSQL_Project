@@ -13,21 +13,20 @@ namespace NoSQL_Project.Models
         [BsonId]
         [BsonRepresentation(BsonType.ObjectId)]
         public string? Id { get; set; }
+
         [BsonElement("IsDisabled")]
         public bool IsDisabled { get; set; } = false;
 
         [BsonElement("Name")]
-        [JsonPropertyName("Name")]
         public Name Name { get; set; }
 
         [BsonElement("Role")]
         [BsonRepresentation(BsonType.String)]
-        [JsonPropertyName("Role")]
         public RoleType Role { get; set; }
 
         [BsonElement("Password")]
         [BsonRepresentation(BsonType.String)]
-        public string Password { get; set; } = "";
+        public string PasswordHashed { get; set; } = "";
 
         [BsonElement("Salt")]
         [BsonRepresentation(BsonType.String)]
@@ -35,43 +34,12 @@ namespace NoSQL_Project.Models
 
         [BsonElement("contactInfo")]
         [JsonPropertyName("contactInfo")]
-        public ContactInfo ContactInfo { get; set; }
+        public ContactInfo ContactInfo { get; set; } = new ContactInfo();
 
         [BsonElement("ReportedTickets")]
         [BsonIgnoreIfNull]
-        public List<Ticket> ReportedTickets { get; set; }
+        public List<Ticket> ReportedTickets { get; set; } = new();
 
-        public Employee()
-        {
-            ReportedTickets = new List<Ticket>();
-        }
 
     }
-
-    public class Name
-    {
-        [BsonElement("FirstName")]
-        public string FirstName { get; set; } = "";
-
-        [BsonElement("LastName")]
-        public string LastName { get; set; } = "";
-
-        public override string ToString()
-        {
-            return FirstName + ' ' + LastName;
-        }
-    }
-
-    public class ContactInfo
-    {
-        [BsonElement("Email")]
-        public string Email { get; set; } = "";
-
-        [BsonElement("Phone")]
-        public string Phone { get; set; } = "";
-
-        [BsonElement("Location")]
-        public string Location { get; set; } = "";
-    }
-
 }

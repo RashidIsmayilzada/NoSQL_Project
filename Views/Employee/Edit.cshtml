@@ -1,5 +1,5 @@
 ﻿@using NoSQL_Project.Models.Enums
-@model NoSQL_Project.Models.Employee
+@model NoSQL_Project.ViewModels.Employee.EmployeeDetailsViewModel
 
 @{
     ViewData["Title"] = "Update Employee";
@@ -27,7 +27,7 @@
         </div>
 
         <div class="card-body">
-            <form asp-action="Update" method="post" novalidate>
+            <form asp-action="Edit" method="post" novalidate>
                 @Html.AntiForgeryToken()
                 <input asp-for="Id" type="hidden" />
 

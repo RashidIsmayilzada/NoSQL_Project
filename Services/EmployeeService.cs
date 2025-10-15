@@ -1,94 +1,159 @@
-﻿using System.Security.Cryptography;
-using System.Text;
+﻿using MongoDB.Driver;
 using NoSQL_Project.Models;
-using NoSQL_Project.Repositories.Interfaces;
 using NoSQL_Project.Services.Interfaces;
+using NoSQL_Project.Repositories.Interfaces;
+using NoSQL_Project.ViewModels.Employee;
+using NoSQL_Project.Utilities;
 
 namespace NoSQL_Project.Services
 {
     public class EmployeeService : IEmployeeService
     {
         private readonly IEmployeeRepository _employeeRepository;
-        public EmployeeService(IEmployeeRepository employeeRepository) {
+
+        public EmployeeService(IEmployeeRepository employeeRepository)
+        {
             _employeeRepository = employeeRepository;
         }
-        
-        public async Task<List<Employee>> GetAllEmployeesAsync()
+
+        // -------------------------------
+        // READ: Get all employees
+        // -------------------------------
+        public async Task<IReadOnlyList<EmployeeListViewModel>> GetListAsync()
         {
-            return await _employeeRepository.GetAllEmployees();
-        }
-        
-        public async Task<Employee> GetEmployeeByIdAsync(string? id)
-        {
-            return await _employeeRepository.GetEmployeeById(id);
-        }
-        
-        public async Task CreateEmployeeAsync(Employee employee)
-        {
-            await _employeeRepository.CreateEmployee(employee);
-        }
-        
-        public async Task UpdateEmployeeAsync(Employee employee)
-        {
-            await _employeeRepository.UpdateEmployee(employee);
+            var employees = await _employeeRepository.GetAllEmployeesWithTickets();
+
+            return employees.Select(e => new EmployeeListViewModel
+            {
+                Id = e.Id ?? "",
+                IsDisabled = e.IsDisabled,
+                Name = e.Name,
+                Role = e.Role,
+                Email = e.ContactInfo.Email,
+                ReportedTicketCount = e.ReportedTickets?.Count ?? 0
+            }).ToList();
         }
 
-        public async Task DeleteEmployeeAsync(string? id)
+        // -------------------------------
+        // READ: Single employee by ID
+        // -------------------------------
+        public async Task<EmployeeDetailsViewModel?> GetDetailsAsync(string id)
+        {
+            var employee = await _employeeRepository.GetEmployeeWithTicketsById(id);
+            if (employee == null) return null;
+
+            return new EmployeeDetailsViewModel
+            {
+                Id = employee.Id ?? "",
+                IsDisabled = employee.IsDisabled,
+                Name = employee.Name,
+                Role = employee.Role,
+                ContactInfo = employee.ContactInfo,
+                ReportedTickets = employee.ReportedTickets ?? new List<Ticket>()
+            };
+        }
+
+        // -------------------------------
+        // READ: Employees with tickets
+        // -------------------------------
+        public async Task<IReadOnlyList<EmployeeDetailsViewModel>> GetWithTicketsAsync()
+        {
+            var employees = await _employeeRepository.GetAllEmployeesWithTickets();
+
+            return employees.Select(e => new EmployeeDetailsViewModel
+            {
+                Id = e.Id ?? "",
+                IsDisabled = e.IsDisabled,
+                Name = e.Name,
+                Role = e.Role,
+                ContactInfo = e.ContactInfo,
+                ReportedTickets = e.ReportedTickets ?? new List<Ticket>()
+            }).ToList();
+        }
+
+        // -------------------------------
+        // AUTHENTICATE
+        // -------------------------------
+        public async Task<EmployeeDetailsViewModel?> AuthenticateAsync(LoginViewModel vm)
+        {
+            var employee = await _employeeRepository.GetEmployeeByEmail(vm.Email);
+            if (employee == null) return null;
+
+            if (PasswordHelper.VerifyPassword(vm.Password, employee.PasswordHashed))
+                return null;
+
+            return new EmployeeDetailsViewModel
+            {
+                Id = employee.Id ?? "",
+                IsDisabled = employee.IsDisabled,
+                Name = employee.Name,
+                Role = employee.Role,
+                ContactInfo = employee.ContactInfo,
+                ReportedTickets = employee.ReportedTickets ?? new List<Ticket>()
+            };
+        }
+
+        // -------------------------------
+        // CREATE
+        // -------------------------------
+        public async Task<string> CreateAsync(EmployeeCreateViewModel vm)
+        {
+            string hash = PasswordHelper.HashPassword(vm.Password);
+
+            Employee employee = new Employee
+            {
+                IsDisabled = vm.IsDisabled,
+                Name = vm.Name,
+                Role = vm.Role,
+                ContactInfo = vm.ContactInfo,
+                PasswordHashed = hash,
+                ReportedTickets = new List<Ticket>()
+            };
+
+            await _employeeRepository.CreateEmployee(employee);
+            return employee.Id ?? "";
+        }
+
+        // -------------------------------
+        // UPDATE PROFILE (non-password)
+        // -------------------------------
+        public async Task<bool> UpdateProfileAsync(EmployeeDetailsViewModel vm)
+        {
+            var employee = await _employeeRepository.GetEmployeeById(vm.Id);
+            if (employee == null) return false;
+
+            employee.IsDisabled = vm.IsDisabled;
+            employee.Name = vm.Name;
+            employee.Role = vm.Role;
+            employee.ContactInfo = vm.ContactInfo;
+
+            return await _employeeRepository.UpdateEmployeeProfile(employee);
+        }
+
+        // -------------------------------
+        // CHANGE PASSWORD
+        // -------------------------------
+        public async Task<bool> ChangePasswordAsync(PasswordChangeViewModel vm)
+        {
+            if (vm.NewPassword != vm.ConfirmNewPassword)
+                return false;
+
+            var employee = await _employeeRepository.GetEmployeeById(vm.Id);
+            if (employee == null) return false;
+
+            string PasswordHashed = PasswordHelper.HashPassword(vm.NewPassword);
+
+            return await _employeeRepository.UpdatePassword(vm.Id, PasswordHashed);
+        }
+
+        // -------------------------------
+        // DELETE
+        // -------------------------------
+        public async Task<bool> DeleteAsync(string id)
         {
             await _employeeRepository.DeleteEmployee(id);
-        }
-        
-        public async Task<List<Employee>> GetEmployeesWithTicketAsync()
-        {
-            return await _employeeRepository.GetEmployeesWithTicket();
+            return true;
         }
 
-        public async Task<Employee?> GetEmployeeByLoginCredentialsAsync(string email, string password)
-        {
-            var emp = await _employeeRepository.GetEmployeeByEmail(email);
-            if (emp is null)
-                return null;
-
-            // Check if employee is disabled
-            if (emp.IsDisabled)
-                return null;
-
-            // decode stored salt
-            byte[] saltBytes = Convert.FromBase64String(emp.Salt);
-
-            // re-hash entered password with stored salt
-            string enteredHash = HashPassword(password, saltBytes);
-
-            // compare safely
-            return enteredHash == emp.Password ? emp : null;
-        }
-
-        // Hash password with SHA-256
-        private string HashPassword(string password, byte[] salt)
-        {
-            using (SHA256 sha256 = SHA256.Create())
-            {
-                // Combine password + salt
-                byte[] passwordBytes = Encoding.UTF8.GetBytes(password);
-                byte[] combined = new byte[passwordBytes.Length + salt.Length];
-
-                Buffer.BlockCopy(passwordBytes, 0, combined, 0, passwordBytes.Length);
-                Buffer.BlockCopy(salt, 0, combined, passwordBytes.Length, salt.Length);
-
-                byte[] hashBytes = sha256.ComputeHash(combined);
-                return Convert.ToBase64String(hashBytes);
-            }
-        }
-
-        private static byte[] GenerateSalt(int size = 16)
-        {
-            // size = number of bytes (16 = 128 bits, which is standard)
-            byte[] salt = new byte[size];
-            using (var rng = RandomNumberGenerator.Create())
-            {
-                rng.GetBytes(salt);
-            }
-            return salt;
-        }
     }
 }

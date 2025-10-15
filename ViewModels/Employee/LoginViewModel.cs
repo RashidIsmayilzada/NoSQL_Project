@@ -1,6 +1,6 @@
-﻿namespace NoSQL_Project.Models
+﻿namespace NoSQL_Project.ViewModels.Employee
 {
-    public class LoginCredentials
+    public class LoginViewModel
     {
         public string Email { get; set; } = "";
         public string Password { get; set; } = "";
