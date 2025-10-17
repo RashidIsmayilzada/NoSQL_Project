@@ -65,8 +65,8 @@ namespace NoSQL_Project.Controllers
             return employee.Role switch
             {
                 RoleType.ServiceDesk => RedirectToAction("Index", "Home"),
-                RoleType.Regular => RedirectToAction("Index", "Employee"),
-                _ => RedirectToAction("Index", "Employee")
+                RoleType.Regular => RedirectToAction("Index", "Home"),
+                _ => RedirectToAction("Index", "Home")
             };
         }
 
