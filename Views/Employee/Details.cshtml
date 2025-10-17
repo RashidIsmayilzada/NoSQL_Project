@@ -13,7 +13,7 @@
             <a asp-action="Index" class="btn btn-secondary">
                 <i class="bi bi-arrow-left me-1"></i> Back to List
             </a>
-            <a asp-action="Update" asp-route-id="@Model.Id" class="btn btn-primary">
+            <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary">
                 <i class="bi bi-pencil-square me-1"></i> Edit
             </a>
         </div>
@@ -90,13 +90,6 @@
                     </tbody>
                 </table>
             </div>
-        </div>
-
-        <div class="card-footer d-flex justify-content-end gap-2">
-            <a asp-action="Index" class="btn btn-outline-secondary">Back</a>
-            <a asp-action="Update" asp-route-id="@Model.Id" class="btn btn-primary">
-                <i class="bi bi-pencil-square me-1"></i> Edit
-            </a>
         </div>
     </div>
 </div>
