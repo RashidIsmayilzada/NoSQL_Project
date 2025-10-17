@@ -1,15 +1,21 @@
-﻿namespace NoSQL_Project.Utilities
+﻿using System.Text;
+
+namespace NoSQL_Project.Utilities
 {
     public static class PasswordHelper
     {
+        private const int WorkFactor = 10;
+
         public static string HashPassword(string password)
         {
-            // Use a secure hashing algorithm like BCrypt or Argon2
-            return BCrypt.Net.BCrypt.HashPassword(password);
+            var pwd = password.Normalize(NormalizationForm.FormC);
+            return BCrypt.Net.BCrypt.HashPassword(pwd, workFactor: WorkFactor);
         }
+
         public static bool VerifyPassword(string password, string hashedPassword)
         {
-            return BCrypt.Net.BCrypt.Verify(password, hashedPassword);
+            var pwd = password.Normalize(NormalizationForm.FormC);
+            return BCrypt.Net.BCrypt.Verify(pwd, hashedPassword);
         }
     }
 }

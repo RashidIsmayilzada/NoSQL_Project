@@ -79,7 +79,7 @@ namespace NoSQL_Project.Services
             var employee = await _employeeRepository.GetEmployeeByEmail(vm.Email);
             if (employee == null) return null;
 
-            if (PasswordHelper.VerifyPassword(vm.Password, employee.PasswordHashed))
+            if (!PasswordHelper.VerifyPassword(vm.Password, employee.PasswordHashed))
                 return null;
 
             return new EmployeeDetailsViewModel
