@@ -1,0 +1,37 @@
+﻿@model NoSQL_Project.ViewComponents.DonutChartViewComponent.DonutChartModel
+
+<div class="card shadow-sm">
+    <div class="card-body">
+        <h5 class="card-title mb-3">@Model.Title</h5>
+        <div class="position-relative" style="height:260px;">
+            <canvas id="@Model.CanvasId" class="w-100 h-100"></canvas>
+        </div>
+        @if (Model.Total.HasValue)
+        {
+            <div class="text-center mt-2 fw-semibold">
+                @Model.Data.Sum()/@Model.Total
+            </div>
+        }
+    </div>
+</div>
+
+<script>
+    (function(){
+      const cfg = {
+        labels: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Labels)),
+        data: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Data))
+      };
+
+      try {
+        const sum = (cfg.data || []).reduce((a,b)=>a + (Number(b)||0), 0);
+        if (sum === 0) return; // دیتای صفر: چارت نکش
+        if (typeof window.renderDonut !== 'function') {
+          console.warn('renderDonut not found (site.js not loaded yet).');
+          return;
+        }
+        window.renderDonut('@Model.CanvasId', cfg);
+      } catch(e) {
+        console.error('Donut render error', e);
+      }
+    })();
+</script>

@@ -1,0 +1,29 @@
+﻿@model NoSQL_Project.ViewModels.DashboardVM
+@using System
+
+<div class="row g-3">
+    <!-- چپ: همیشه -->
+    <div class="@(Model.IsServiceDesk ? "col-md-6" : "col-12")">
+        @await Component.InvokeAsync("DonutChart",
+            new NoSQL_Project.ViewComponents.DonutChartViewComponent.DonutChartModel {
+                Title  = "Tickets by Status",
+                Labels = Model.StatusBreakdown.Labels,
+                Data   = Model.StatusBreakdown.Data,
+                Total  = Model.StatusBreakdown.Total
+            })
+    </div>
+
+    <!-- راست: فقط Service Desk -->
+    @if (Model.IsServiceDesk)
+    {
+        <div class="col-md-6">
+            @await Component.InvokeAsync("DonutChart",
+                new NoSQL_Project.ViewComponents.DonutChartViewComponent.DonutChartModel {
+                    Title  = "Overdue vs OK (Open only)",
+                    Labels = new[] { "Overdue", "OK" },
+                    Data   = new[] { Model.OverdueOpen, Math.Max(0, Model.OpenTickets - Model.OverdueOpen) },
+                    Total  = Model.OpenTickets
+                })
+        </div>
+    }
+</div>
