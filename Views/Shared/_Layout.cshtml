@@ -82,49 +82,27 @@
                         </a>
                     </li>
 
-                    <li class="nav-item dropdown">
-                        <a class="nav-link text-white dropdown-toggle d-flex align-items-center gap-3" href="#"
-                           id="mobileMyTickets" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    <li class="nav-item">
+                        <a class="nav-link d-flex align-items-center gap-3 @IsActive("Ticket","Index")"
+                           asp-controller="Ticket" asp-action="Index">
                             <i class="bi bi-ticket-detailed fs-4"></i> My Tickets
                         </a>
-                        <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="mobileMyTickets">
-                            <li>
-                                <a class="dropdown-item @IsActive("Dashboard", "Index")"
-                                   asp-controller="Dashboard" asp-action="Index">Dashboard</a>
-                            </li>
-                            <li><a class="dropdown-item text-white" href="#">List</a></li>
-                            <li><a class="dropdown-item text-white" href="#">Create New</a></li>
-                        </ul>
                     </li>
 
                     @if (isServiceDesk)
                     {
-                        <li class="nav-item dropdown">
-                            <a class="nav-link text-white dropdown-toggle d-flex align-items-center gap-3" href="#"
-                               id="mobileAllTickets" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <li class="nav-item">
+                            <a class="nav-link d-flex align-items-center gap-3 @IsActive("Ticket","Index")"
+                               asp-controller="Ticket" asp-action="Index">
                                 <i class="bi bi-collection fs-4"></i> All Tickets
                             </a>
-                            <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="mobileAllTickets">
-                                <li>
-                                    <a class="dropdown-item @IsActive("Ticket", "Index")"
-                                       asp-controller="Ticket" asp-action="Index">List</a>
-                                </li>
-                                <li><a class="dropdown-item text-white" href="#">Create New</a></li>
-                            </ul>
                         </li>
 
-                        <li class="nav-item dropdown">
-                            <a class="nav-link text-white dropdown-toggle d-flex align-items-center gap-3" href="#"
-                               id="mobileEmployees" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <li class="nav-item">
+                            <a class="nav-link d-flex align-items-center gap-3 @IsActive("Employee","Index")"
+                               asp-controller="Employee" asp-action="Index">
                                 <i class="bi bi-people fs-4"></i> Employees
                             </a>
-                            <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="mobileEmployees">
-                                <li>
-                                    <a class="dropdown-item @IsActive("Employee", "Index")"
-                                       asp-controller="Employee" asp-action="Index">List</a>
-                                </li>
-                                <li><a class="dropdown-item text-white" href="#">Create New</a></li>
-                            </ul>
                         </li>
                     }
 
@@ -170,54 +148,26 @@
                 </li>
 
                 <li class="nav-item">
-                    <button class="nav-link collapsed text-start d-flex align-items-center gap-3 w-100 @IsActive("Ticket", "MyTickets")"
-                            data-bs-toggle="collapse" data-bs-target="#mytickets-collapse" aria-expanded="false">
+                    <a class="nav-link d-flex align-items-center gap-3 @IsActive("Ticket","Index")"
+                       asp-controller="Ticket" asp-action="Index">
                         <i class="bi bi-ticket-detailed fs-4"></i> My Tickets
-                    </button>
-                    <div class="collapse" id="mytickets-collapse">
-                        <ul class="btn-toggle-nav list-unstyled fw-normal pb-1 small ms-4">
-                            <li>
-                                <a class="link-light rounded @IsActive("Dashboard", "Index")"
-                                   asp-controller="Dashboard" asp-action="Index">Dashboard</a>
-                            </li>
-                            <li><a href="#" class="link-light rounded">List</a></li>
-                            <li><a href="#" class="link-light rounded">Create New</a></li>
-                        </ul>
-                    </div>
+                    </a>
                 </li>
 
                 @if (isServiceDesk)
                 {
                     <li class="nav-item">
-                        <button class="nav-link collapsed text-start d-flex align-items-center gap-3 w-100 @IsActive("Ticket", "Index")"
-                                data-bs-toggle="collapse" data-bs-target="#alltickets-collapse" aria-expanded="false">
+                        <a class="nav-link d-flex align-items-center gap-3 @IsActive("Ticket","Index")"
+                           asp-controller="Ticket" asp-action="Index">
                             <i class="bi bi-collection fs-4"></i> All Tickets
-                        </button>
-                        <div class="collapse" id="alltickets-collapse">
-                            <ul class="btn-toggle-nav list-unstyled fw-normal pb-1 small ms-4">
-                                <li>
-                                    <a class="link-light rounded @IsActive("Ticket", "Index")"
-                                       asp-controller="Ticket" asp-action="Index">List</a>
-                                </li>
-                                <li><a href="#" class="link-light rounded">Create New</a></li>
-                            </ul>
-                        </div>
+                        </a>
                     </li>
 
                     <li class="nav-item">
-                        <button class="nav-link collapsed text-start d-flex align-items-center gap-3 w-100 @IsActive("Employee")"
-                                data-bs-toggle="collapse" data-bs-target="#employees-collapse" aria-expanded="false">
+                        <a class="nav-link d-flex align-items-center gap-3 @IsActive("Employee","Index")"
+                           asp-controller="Employee" asp-action="Index">
                             <i class="bi bi-people fs-4"></i> Employees
-                        </button>
-                        <div class="collapse" id="employees-collapse">
-                            <ul class="btn-toggle-nav list-unstyled fw-normal pb-1 small ms-4">
-                                <li>
-                                    <a class="link-light rounded @IsActive("Employee", "Index")"
-                                       asp-controller="Employee" asp-action="Index">List</a>
-                                </li>
-                                <li><a href="#" class="link-light rounded">Create New</a></li>
-                            </ul>
-                        </div>
+                        </a>
                     </li>
                 }
             </ul>
@@ -241,6 +191,7 @@
 
     <div class="container p-0">
         <main role="main" class="w-100 fs-5">
+            @await Html.PartialAsync("_Alerts")
             @RenderBody()
         </main>
     </div>

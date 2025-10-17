@@ -1,12 +1,16 @@
+using System.Collections.ObjectModel;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MongoDB.Bson;
 using MongoDB.Driver;
 using NoSQL_Project.Models;
+using NoSQL_Project.Models.Enums;
 using NoSQL_Project.Services.Interfaces;
+using NoSQL_Project.ViewModels.Employee;
 
 namespace NoSQL_Project.Controllers
 {
-    
+    [Authorize(Roles = "ServiceDesk")]
     public class EmployeeController(IEmployeeService employeeService, ILogger<EmployeeController> logger)
         : Controller
     {
@@ -20,7 +24,7 @@ namespace NoSQL_Project.Controllers
             try
             {
                 _logger.LogInformation("Retrieving all employees");
-                var employees = await _employeeService.GetAllEmployeesAsync();
+                IReadOnlyList<EmployeeListViewModel> employees = await _employeeService.GetListAsync();
                 return View(employees);
             }
             catch (MongoException ex)
@@ -59,7 +63,7 @@ namespace NoSQL_Project.Controllers
                 }
 
                 _logger.LogInformation("Retrieving employee with ID: {EmployeeId}", id);
-                var employee = await _employeeService.GetEmployeeByIdAsync(id);
+                EmployeeDetailsViewModel? employee = await _employeeService.GetDetailsAsync(id);
 
                 if (employee == null)
                 {
@@ -91,7 +95,7 @@ namespace NoSQL_Project.Controllers
             try
             {
                 _logger.LogInformation("Retrieving employees with their tickets");
-                var employees = await _employeeService.GetEmployeesWithTicketAsync();
+                IReadOnlyList<EmployeeDetailsViewModel> employees = await _employeeService.GetWithTicketsAsync();
                 return View(employees);
             }
             catch (MongoException ex)
@@ -118,7 +122,7 @@ namespace NoSQL_Project.Controllers
         // POST: /Employee/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(Employee employee)
+        public async Task<IActionResult> Create(EmployeeCreateViewModel employee)
         {
             try
             {
@@ -135,8 +139,8 @@ namespace NoSQL_Project.Controllers
                     return View(employee);
                 }
 
-                _logger.LogInformation("Creating new employee: {EmployeeId}", employee.Id);
-                await _employeeService.CreateEmployeeAsync(employee);
+                _logger.LogInformation("Creating new employee");
+                await _employeeService.CreateAsync(employee);
 
                 TempData["Success"] = "Employee created successfully!";
                 return RedirectToAction(nameof(Index));
@@ -177,7 +181,7 @@ namespace NoSQL_Project.Controllers
                 }
 
                 _logger.LogInformation("Loading employee for edit: {EmployeeId}", id);
-                var employee = await _employeeService.GetEmployeeByIdAsync(id);
+                EmployeeDetailsViewModel? employee = await _employeeService.GetDetailsAsync(id);
 
                 if (employee == null)
                 {
@@ -185,7 +189,6 @@ namespace NoSQL_Project.Controllers
                     TempData["Error"] = $"Employee with ID {id} not found.";
                     return RedirectToAction(nameof(Index));
                 }
-
                 return View(employee);
             }
             catch (MongoException ex)
@@ -205,7 +208,7 @@ namespace NoSQL_Project.Controllers
         // POST: /Employee/Edit
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(Employee employee)
+        public async Task<IActionResult> Edit(EmployeeDetailsViewModel employee)
         {
             try
             {
@@ -238,7 +241,13 @@ namespace NoSQL_Project.Controllers
                 }
 
                 _logger.LogInformation("Updating employee: {EmployeeId}", employee.Id);
-                await _employeeService.UpdateEmployeeAsync(employee);
+                bool result = await _employeeService.UpdateProfileAsync(employee);
+                if (!result)
+                {
+                    _logger.LogWarning("Failed to update employee: {EmployeeId}", employee.Id);
+                    ModelState.AddModelError("", "Failed to update employee. Please try again.");
+                    return View(employee);
+                }
 
                 TempData["Success"] = "Employee updated successfully!";
                 return RedirectToAction(nameof(Index));
@@ -279,7 +288,7 @@ namespace NoSQL_Project.Controllers
                 }
 
                 _logger.LogInformation("Loading employee for delete confirmation: {EmployeeId}", id);
-                var employee = await _employeeService.GetEmployeeByIdAsync(id);
+                EmployeeDetailsViewModel? employee = await _employeeService.GetDetailsAsync(id);
 
                 if (employee == null)
                 {
@@ -287,6 +296,7 @@ namespace NoSQL_Project.Controllers
                     TempData["Error"] = $"Employee with ID {id} not found.";
                     return RedirectToAction(nameof(Index));
                 }
+
 
                 return View(employee);
             }
@@ -327,7 +337,13 @@ namespace NoSQL_Project.Controllers
                 }
 
                 _logger.LogInformation("Deleting employee: {EmployeeId}", id);
-                await _employeeService.DeleteEmployeeAsync(id);
+                bool result = await _employeeService.DeleteAsync(id);
+                if (!result)
+                {
+                    _logger.LogWarning("Failed to delete employee: {EmployeeId}", id);
+                    TempData["Error"] = "Failed to delete employee. Please try again.";
+                    return RedirectToAction(nameof(Index));
+                }
 
                 TempData["Success"] = "Employee deleted successfully!";
                 return RedirectToAction(nameof(Index));

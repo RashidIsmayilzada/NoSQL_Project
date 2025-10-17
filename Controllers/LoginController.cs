@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 using NoSQL_Project.Models;
 using NoSQL_Project.Models.Enums;
 using NoSQL_Project.Services.Interfaces;
+using NoSQL_Project.ViewModels.Employee;
 
 namespace NoSQL_Project.Controllers
 {
@@ -30,13 +31,13 @@ namespace NoSQL_Project.Controllers
         [HttpPost]
         [AllowAnonymous]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Login(LoginCredentials loginModel)
+        public async Task<IActionResult> Login(LoginViewModel loginModel)
         {
             if (!ModelState.IsValid)
                 return View(loginModel);
 
             // IMPORTANT: Prefer a service method that returns employee by email and a separate password verifier.
-            Employee? employee = await _employeesService.GetEmployeeByLoginCredentialsAsync(loginModel.Email, loginModel.Password);
+            EmployeeDetailsViewModel? employee = await _employeesService.AuthenticateAsync(loginModel);
             if (employee == null)
             {
                 ModelState.AddModelError(string.Empty, "Incorrect email or password.");
