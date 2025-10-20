@@ -83,7 +83,7 @@
                     </li>
 
                     <li class="nav-item">
-                        <a class="nav-link d-flex align-items-center gap-3 @IsActive("Ticket","Index")"
+                        <a class="nav-link d-flex align-items-center gap-3 @IsActive("Ticket", "Index")"
                            asp-controller="Ticket" asp-action="Index">
                             <i class="bi bi-ticket-detailed fs-4"></i> My Tickets
                         </a>
@@ -92,14 +92,14 @@
                     @if (isServiceDesk)
                     {
                         <li class="nav-item">
-                            <a class="nav-link d-flex align-items-center gap-3 @IsActive("Ticket","Index")"
-                               asp-controller="Ticket" asp-action="Index">
+                            <a class="nav-link d-flex align-items-center gap-3 @IsActive("Ticket", "All")"
+                               asp-controller="Ticket" asp-action="All">
                                 <i class="bi bi-collection fs-4"></i> All Tickets
                             </a>
                         </li>
 
                         <li class="nav-item">
-                            <a class="nav-link d-flex align-items-center gap-3 @IsActive("Employee","Index")"
+                            <a class="nav-link d-flex align-items-center gap-3 @IsActive("Employee", "Index")"
                                asp-controller="Employee" asp-action="Index">
                                 <i class="bi bi-people fs-4"></i> Employees
                             </a>
@@ -148,7 +148,7 @@
                 </li>
 
                 <li class="nav-item">
-                    <a class="nav-link d-flex align-items-center gap-3 @IsActive("Ticket","Index")"
+                    <a class="nav-link d-flex align-items-center gap-3 @IsActive("Ticket", "Index")"
                        asp-controller="Ticket" asp-action="Index">
                         <i class="bi bi-ticket-detailed fs-4"></i> My Tickets
                     </a>
@@ -157,14 +157,14 @@
                 @if (isServiceDesk)
                 {
                     <li class="nav-item">
-                        <a class="nav-link d-flex align-items-center gap-3 @IsActive("Ticket","Index")"
-                           asp-controller="Ticket" asp-action="Index">
+                        <a class="nav-link d-flex align-items-center gap-3 @IsActive("Ticket", "All")"
+                           asp-controller="Ticket" asp-action="All">
                             <i class="bi bi-collection fs-4"></i> All Tickets
                         </a>
                     </li>
 
                     <li class="nav-item">
-                        <a class="nav-link d-flex align-items-center gap-3 @IsActive("Employee","Index")"
+                        <a class="nav-link d-flex align-items-center gap-3 @IsActive("Employee", "Index")"
                            asp-controller="Employee" asp-action="Index">
                             <i class="bi bi-people fs-4"></i> Employees
                         </a>

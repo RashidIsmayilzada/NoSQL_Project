@@ -1,9 +1,15 @@
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using MongoDB.Bson;
 using MongoDB.Driver;
 using NoSQL_Project.Models;
+using NoSQL_Project.Models.Enums;
+using NoSQL_Project.Services;
 using NoSQL_Project.Services.Interfaces;
+using NoSQL_Project.ViewModels.Employee;
+using System.Security.Claims;
+using NoSQL_Project.ViewModels.Tickets;
 
 namespace NoSQL_Project.Controllers
 {
@@ -11,321 +17,364 @@ namespace NoSQL_Project.Controllers
     public class TicketController : Controller
     {
         private readonly ITicketService _ticketService;
+        private readonly IEmployeeService _employeeService;
         private readonly ILogger<TicketController> _logger;
 
-        public TicketController(ITicketService ticketService, ILogger<TicketController> logger)
+        public TicketController(ITicketService ticketService , IEmployeeService employeeService,  ILogger<TicketController> logger)
         {
             _ticketService = ticketService;
+            _employeeService = employeeService;
             _logger = logger;
         }
 
+
+
+
         // GET: /Ticket
+        // GET: /Ticket → "My Tickets"
         [HttpGet]
         public async Task<IActionResult> Index()
         {
-            try
+            // Check if current user is ServiceDesk or normal employee
+            var isDesk = User.IsInRole(nameof(RoleType.ServiceDesk));
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            // ServiceDesk → tickets assigned to them
+            // Normal user → tickets they reported
+            IEnumerable<Ticket> tickets = isDesk
+                ? await _ticketService.GetAssignedToUserAsync(userId)  // new method you added
+                : await _ticketService.GetForUserAsync(userId);
+
+            // Map database tickets to view model items
+            var list = tickets.Select(t => new TicketListItemVM
             {
-                _logger.LogInformation("Retrieving all tickets");
-                var tickets = await _ticketService.GetAllTicketsAsync();
-                return View(tickets);
-            }
-            catch (MongoException ex)
+                Id = t.Id!,
+                Title = t.Title,
+                Status = t.Status,
+                Priority = t.Priority,
+                Deadline = t.Deadline,
+                ReporterName = "(hidden)",
+                AssigneeName = null  // if exists, otherwise null/"-"t.AssignedToDisplayName
+            });
+
+            // Prepare view model
+            var vm = new TicketListVM
             {
-                _logger.LogError(ex, "Database error while retrieving tickets");
-                TempData["Error"] = "Unable to retrieve tickets. Please try again later.";
-                return View("Error");
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Unexpected error while retrieving tickets");
-                TempData["Error"] = "An unexpected error occurred.";
-                return View("Error");
-            }
+                Items = list,
+                IsServiceDesk = isDesk
+            };
+
+            // "My" flag for the view title
+            ViewBag.Scope = "My";
+
+            return View("Index", vm);
         }
+        // GET: /Ticket/All  → "All Tickets" (ServiceDesk only)
+        [HttpGet]
+        public async Task<IActionResult> All()
+        {
+            var isDesk = User.IsInRole(nameof(RoleType.ServiceDesk));
+            if (!isDesk)
+            {
+                TempData["Error"] = "Only ServiceDesk can view all tickets.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            var tickets = await _ticketService.GetAllTicketsAsync();
+
+            var list = tickets.Select(t => new TicketListItemVM
+            {
+                Id = t.Id!,
+                Title = t.Title,
+                Status = t.Status,
+                Priority = t.Priority,
+                Deadline = t.Deadline,
+                ReporterName = "(hidden)",
+                AssigneeName = null // اگر نمایش اسم لازم شد بعداً map می‌کنیم
+            });
+
+            var vm = new TicketListVM
+            {
+                Items = list,
+                IsServiceDesk = true
+            };
+
+            ViewBag.Scope = "All";
+            return View("Index", vm); // از همان ویوی Index استفاده می‌کنیم
+        }
+
 
         // GET: /Ticket/Details/{id}
         [HttpGet]
         public async Task<IActionResult> Details(string id)
         {
-            try
+            if (string.IsNullOrWhiteSpace(id) || !ObjectId.TryParse(id, out _))
             {
-                if (string.IsNullOrEmpty(id))
-                {
-                    _logger.LogWarning("Details called with null or empty ID");
-                    TempData["Error"] = "Ticket ID is required.";
-                    return RedirectToAction(nameof(Index));
-                }
-
-                // Validate ObjectId format
-                if (!ObjectId.TryParse(id, out _))
-                {
-                    _logger.LogWarning("Invalid ticket ID format: {TicketId}", id);
-                    TempData["Error"] = "Invalid ticket ID format.";
-                    return RedirectToAction(nameof(Index));
-                }
-
-                _logger.LogInformation("Retrieving ticket with ID: {TicketId}", id);
-                var ticket = await _ticketService.GetTicketByIdAsync(id);
-
-                if (ticket == null)
-                {
-                    _logger.LogWarning("Ticket not found with ID: {TicketId}", id);
-                    TempData["Error"] = $"Ticket with ID {id} not found.";
-                    return RedirectToAction(nameof(Index));
-                }
-
-                return View(ticket);
-            }
-            catch (MongoException ex)
-            {
-                _logger.LogError(ex, "Database error while retrieving ticket {TicketId}", id);
-                TempData["Error"] = "Unable to retrieve ticket. Please try again later.";
+                TempData["Error"] = "Invalid ticket id.";
                 return RedirectToAction(nameof(Index));
             }
-            catch (Exception ex)
+
+            var t = await _ticketService.GetTicketByIdAsync(id);
+            if (t == null)
             {
-                _logger.LogError(ex, "Unexpected error while retrieving ticket {TicketId}", id);
-                TempData["Error"] = "An unexpected error occurred.";
+                TempData["Error"] = "Ticket not found.";
                 return RedirectToAction(nameof(Index));
             }
+
+            var vm = new TicketDetailsVM
+            {
+                Id = t.Id!,
+                Title = t.Title,
+                Type = t.Type,
+                Priority = t.Priority,
+                Deadline = t.Deadline,
+                Description = t.Description,
+                Status = t.Status,
+                ReporterName = "(hidden)",
+                AssigneeName = null
+            };
+            return View(vm);
         }
 
         // GET: /Ticket/Create
         [HttpGet]
-        public IActionResult Create()
+        public async Task<IActionResult> Create()
         {
-            return View();
+            var isDesk = User.IsInRole(nameof(RoleType.ServiceDesk));
+            var vm = new TicketCreateVM();
+
+            if (isDesk)
+            {
+                var employees = await _employeeService.GetListAsync();
+                vm.ReporterOptions = employees.Select(e =>
+                    new SelectListItem(GetDisplayName(e), e.Id));
+            }
+            return View(vm);
         }
 
         // POST: /Ticket/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(Ticket ticket)
+        public async Task<IActionResult> Create(TicketCreateVM vm)
         {
-            try
+            var isDesk = User.IsInRole(nameof(RoleType.ServiceDesk));
+            var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (!ModelState.IsValid)
             {
-                if (ticket == null)
+                if (isDesk)
                 {
-                    _logger.LogWarning("Create called with null ticket");
-                    ModelState.AddModelError("", "Ticket data is required.");
-                    return View(ticket);
+                    var employees = await _employeeService.GetListAsync();
+                    vm.ReporterOptions = employees.Select(e =>
+                        new SelectListItem(GetDisplayName(e), e.Id));
                 }
-
-                if (!ModelState.IsValid)
-                {
-                    _logger.LogWarning("Invalid model state for ticket creation");
-                    return View(ticket);
-                }
-
-                _logger.LogInformation("Creating new ticket: {TicketId}", ticket.TicketId);
-                await _ticketService.CreateTicketAsync(ticket);
-
-                TempData["Success"] = "Ticket created successfully!";
-                return RedirectToAction(nameof(Index));
+                return View(vm);
             }
-            catch (MongoException ex)
+
+            var ticket = new Ticket
             {
-                _logger.LogError(ex, "Database error while creating ticket");
-                ModelState.AddModelError("", "Unable to create ticket. Please try again later.");
-                return View(ticket);
-            }
-            catch (Exception ex)
+                Title = vm.Title,
+                Type = vm.Type,
+                Priority = vm.Priority,
+                Deadline = vm.Deadline,
+                Description = vm.Description,
+                Status = TicketStatus.Open,
+                ReportedBy = isDesk ? vm.ReportedBy : currentUserId
+            };
+
+            if (isDesk && string.IsNullOrEmpty(ticket.ReportedBy))
             {
-                _logger.LogError(ex, "Unexpected error while creating ticket");
-                ModelState.AddModelError("", "An unexpected error occurred.");
-                return View(ticket);
+                ModelState.AddModelError(nameof(vm.ReportedBy), "Please select the reporter.");
+                var employees = await _employeeService.GetListAsync();
+                vm.ReporterOptions = employees.Select(e =>
+                    new SelectListItem(GetDisplayName(e), e.Id));
+                return View(vm);
             }
+
+            await _ticketService.CreateTicketAsync(ticket);
+            TempData["Success"] = "Ticket created successfully!";
+            return RedirectToAction(nameof(Index));
         }
 
-        // GET: /Ticket/Edit/{id}
+        // GET: /Ticket/Edit/{id}  (هنوز با مدل دامِین کار می‌کنیم؛ بعداً اگر خواستی VM بده)
         [HttpGet]
         public async Task<IActionResult> Edit(string id)
         {
-            try
+            if (string.IsNullOrWhiteSpace(id) || !ObjectId.TryParse(id, out _))
             {
-                if (string.IsNullOrEmpty(id))
-                {
-                    _logger.LogWarning("Edit called with null or empty ID");
-                    TempData["Error"] = "Ticket ID is required.";
-                    return RedirectToAction(nameof(Index));
-                }
-
-                // Validate ObjectId format
-                if (!ObjectId.TryParse(id, out _))
-                {
-                    _logger.LogWarning("Invalid ticket ID format: {TicketId}", id);
-                    TempData["Error"] = "Invalid ticket ID format.";
-                    return RedirectToAction(nameof(Index));
-                }
-
-                _logger.LogInformation("Loading ticket for edit: {TicketId}", id);
-                var ticket = await _ticketService.GetTicketByIdAsync(id);
-
-                if (ticket == null)
-                {
-                    _logger.LogWarning("Ticket not found for edit with ID: {TicketId}", id);
-                    TempData["Error"] = $"Ticket with ID {id} not found.";
-                    return RedirectToAction(nameof(Index));
-                }
-
-                return View(ticket);
-            }
-            catch (MongoException ex)
-            {
-                _logger.LogError(ex, "Database error while loading ticket for edit {TicketId}", id);
-                TempData["Error"] = "Unable to load ticket. Please try again later.";
+                TempData["Error"] = "Invalid ticket id.";
                 return RedirectToAction(nameof(Index));
             }
-            catch (Exception ex)
+
+            var t = await _ticketService.GetTicketByIdAsync(id);
+            if (t == null)
             {
-                _logger.LogError(ex, "Unexpected error while loading ticket for edit {TicketId}", id);
-                TempData["Error"] = "An unexpected error occurred.";
+                TempData["Error"] = "Ticket not found.";
                 return RedirectToAction(nameof(Index));
             }
+            var isDesk = User.IsInRole(nameof(RoleType.ServiceDesk));
+            var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!isDesk && t.ReportedBy != currentUserId)
+            {
+                TempData["Error"] = "You are not allowed to edit this ticket.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            return View(t);
         }
 
-        // POST: /Ticket/Edit
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(Ticket ticket)
         {
-            try
+            if (ticket == null || string.IsNullOrEmpty(ticket.Id) || !ObjectId.TryParse(ticket.Id, out _))
             {
-                if (ticket == null)
-                {
-                    _logger.LogWarning("Edit POST called with null ticket");
-                    TempData["Error"] = "Ticket data is required.";
-                    return RedirectToAction(nameof(Index));
-                }
+                ModelState.AddModelError("", "Invalid ticket.");
+                return View(ticket);
+            }
 
-                if (string.IsNullOrEmpty(ticket.Id))
-                {
-                    _logger.LogWarning("Edit POST called with null or empty ticket ID");
-                    ModelState.AddModelError("", "Ticket ID is required.");
-                    return View(ticket);
-                }
+            if (!ModelState.IsValid) return View(ticket);
 
-                // Validate ObjectId format
-                if (!ObjectId.TryParse(ticket.Id, out _))
-                {
-                    _logger.LogWarning("Invalid ticket ID format in edit: {TicketId}", ticket.Id);
-                    ModelState.AddModelError("", "Invalid ticket ID format.");
-                    return View(ticket);
-                }
-
-                if (!ModelState.IsValid)
-                {
-                    _logger.LogWarning("Invalid model state for ticket edit: {TicketId}", ticket.Id);
-                    return View(ticket);
-                }
-
-                _logger.LogInformation("Updating ticket: {TicketId}", ticket.Id);
-                await _ticketService.UpdateTicketAsync(ticket.Id, ticket);
-
-                TempData["Success"] = "Ticket updated successfully!";
+            // لود نسخه فعلی برای چک مالکیت
+            var existing = await _ticketService.GetTicketByIdAsync(ticket.Id);
+            if (existing == null)
+            {
+                TempData["Error"] = "Ticket not found.";
                 return RedirectToAction(nameof(Index));
             }
-            catch (MongoException ex)
+
+            var isDesk = User.IsInRole(nameof(RoleType.ServiceDesk));
+            var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!isDesk && existing.ReportedBy != currentUserId)
             {
-                _logger.LogError(ex, "Database error while updating ticket {TicketId}", ticket?.Id);
-                ModelState.AddModelError("", "Unable to update ticket. Please try again later.");
-                return View(ticket);
+                TempData["Error"] = "You are not allowed to edit this ticket.";
+                return RedirectToAction(nameof(Index));
             }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Unexpected error while updating ticket {TicketId}", ticket?.Id);
-                ModelState.AddModelError("", "An unexpected error occurred.");
-                return View(ticket);
-            }
+
+            await _ticketService.UpdateTicketAsync(ticket.Id, ticket);
+            TempData["Success"] = "Ticket updated.";
+            return RedirectToAction(nameof(Index));
         }
 
         // GET: /Ticket/Delete/{id}
         [HttpGet]
         public async Task<IActionResult> Delete(string id)
         {
-            try
+            if (string.IsNullOrWhiteSpace(id) || !ObjectId.TryParse(id, out _))
             {
-                if (string.IsNullOrEmpty(id))
-                {
-                    _logger.LogWarning("Delete called with null or empty ID");
-                    TempData["Error"] = "Ticket ID is required.";
-                    return RedirectToAction(nameof(Index));
-                }
-
-                // Validate ObjectId format
-                if (!ObjectId.TryParse(id, out _))
-                {
-                    _logger.LogWarning("Invalid ticket ID format: {TicketId}", id);
-                    TempData["Error"] = "Invalid ticket ID format.";
-                    return RedirectToAction(nameof(Index));
-                }
-
-                _logger.LogInformation("Loading ticket for delete confirmation: {TicketId}", id);
-                var ticket = await _ticketService.GetTicketByIdAsync(id);
-
-                if (ticket == null)
-                {
-                    _logger.LogWarning("Ticket not found for delete with ID: {TicketId}", id);
-                    TempData["Error"] = $"Ticket with ID {id} not found.";
-                    return RedirectToAction(nameof(Index));
-                }
-
-                return View(ticket);
-            }
-            catch (MongoException ex)
-            {
-                _logger.LogError(ex, "Database error while loading ticket for delete {TicketId}", id);
-                TempData["Error"] = "Unable to load ticket. Please try again later.";
+                TempData["Error"] = "Invalid ticket id.";
                 return RedirectToAction(nameof(Index));
             }
-            catch (Exception ex)
+
+            var t = await _ticketService.GetTicketByIdAsync(id);
+            if (t == null)
             {
-                _logger.LogError(ex, "Unexpected error while loading ticket for delete {TicketId}", id);
-                TempData["Error"] = "An unexpected error occurred.";
+                TempData["Error"] = "Ticket not found.";
+                return RedirectToAction(nameof(Index));
+
+            }
+            var isDesk = User.IsInRole(nameof(RoleType.ServiceDesk));
+            var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!isDesk && t.ReportedBy != currentUserId)
+            {
+                TempData["Error"] = "You are not allowed to delete this ticket.";
                 return RedirectToAction(nameof(Index));
             }
+            return View(t);
         }
 
-        // POST: /Ticket/Delete
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(string id)
         {
-            try
+            if (string.IsNullOrWhiteSpace(id) || !ObjectId.TryParse(id, out _))
             {
-                if (string.IsNullOrEmpty(id))
-                {
-                    _logger.LogWarning("DeleteConfirmed called with null or empty ID");
-                    TempData["Error"] = "Ticket ID is required.";
-                    return RedirectToAction(nameof(Index));
-                }
-
-                // Validate ObjectId format
-                if (!ObjectId.TryParse(id, out _))
-                {
-                    _logger.LogWarning("Invalid ticket ID format in delete: {TicketId}", id);
-                    TempData["Error"] = "Invalid ticket ID format.";
-                    return RedirectToAction(nameof(Index));
-                }
-
-                _logger.LogInformation("Deleting ticket: {TicketId}", id);
-                await _ticketService.DeleteTicketAsync(id);
-
-                TempData["Success"] = "Ticket deleted successfully!";
+                TempData["Error"] = "Invalid ticket id.";
                 return RedirectToAction(nameof(Index));
             }
-            catch (MongoException ex)
+            var t = await _ticketService.GetTicketByIdAsync(id);
+            if (t == null)
             {
-                _logger.LogError(ex, "Database error while deleting ticket {TicketId}", id);
-                TempData["Error"] = "Unable to delete ticket. Please try again later.";
+                TempData["Error"] = "Ticket not found.";
                 return RedirectToAction(nameof(Index));
             }
-            catch (Exception ex)
+
+            var isDesk = User.IsInRole(nameof(RoleType.ServiceDesk));
+            var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!isDesk && t.ReportedBy != currentUserId)
             {
-                _logger.LogError(ex, "Unexpected error while deleting ticket {TicketId}", id);
-                TempData["Error"] = "An unexpected error occurred.";
+                TempData["Error"] = "You are not allowed to delete this ticket.";
                 return RedirectToAction(nameof(Index));
             }
+
+
+            await _ticketService.DeleteTicketAsync(id);
+            TempData["Success"] = "Ticket deleted.";
+            return RedirectToAction(nameof(Index));
         }
+
+        // helper
+        private static string GetDisplayName(EmployeeListViewModel e)
+        {
+            var fullName = $"{e.Name?.FirstName} {e.Name?.LastName}".Trim();
+            return !string.IsNullOrWhiteSpace(fullName) ? $"{fullName} ({e.Email})" : (e.Email ?? e.Id);
+        }
+
+
+        [HttpPost]
+        [Authorize(Roles = nameof(RoleType.ServiceDesk))]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AssignToMe(string id, string? returnTo = null)
+        {
+            // validate id
+            if (string.IsNullOrWhiteSpace(id) || !ObjectId.TryParse(id, out _))
+            {
+                TempData["Error"] = "Invalid ticket id.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            var myId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(myId))
+            {
+                TempData["Error"] = "Cannot resolve current user.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            var ok = await _ticketService.AssignAsync(id, myId);
+            TempData[ok ? "Success" : "Error"] = ok ? "Assigned to you." : "Assign failed.";
+
+            // keep user in the same list if we passed returnTo=All
+            if (string.Equals(returnTo, "All", StringComparison.OrdinalIgnoreCase))
+                return RedirectToAction(nameof(All));
+
+            return RedirectToAction(nameof(Index)); // default: My Tickets
+        }
+
+
+        // اگر خواستی بعداً برای انتخاب فرد دیگر هم بگذاری:
+        [HttpPost]
+        [Authorize(Roles = nameof(RoleType.ServiceDesk))]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Assign(string id, string assigneeId)
+        {
+            if (string.IsNullOrWhiteSpace(id) || !MongoDB.Bson.ObjectId.TryParse(id, out _))
+            {
+                TempData["Error"] = "Invalid ticket id.";
+                return RedirectToAction(nameof(Index));
+            }
+            if (string.IsNullOrWhiteSpace(assigneeId))
+            {
+                TempData["Error"] = "Please choose an assignee.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            var ok = await _ticketService.AssignAsync(id, assigneeId);
+            TempData[ok ? "Success" : "Error"] = ok ? "Assigned successfully." : "Assign failed.";
+            return RedirectToAction(nameof(Index));
+        }
+
     }
 }
+
+    
+  

@@ -107,4 +107,25 @@ public class TicketRepository : ITicketRepository
     {
         await _tickets.DeleteOneAsync(t => t.Id == id);
     }
+    public async Task<IEnumerable<Ticket>> GetByReporterIdAsync(string userId)
+    {
+        var filter = Builders<Ticket>.Filter.Eq(t => t.ReportedBy, userId);
+        return await _tickets.Find(filter).ToListAsync();
+    }
+    public async Task<bool> AssignAsync(string ticketId, string assigneeUserId)
+    {
+        var filter = Builders<Ticket>.Filter.Eq(t => t.Id, ticketId);
+        var update = Builders<Ticket>.Update.Set(t => t.AssignedTo, assigneeUserId);
+
+        var res = await _tickets.UpdateOneAsync(filter, update);
+        return res.MatchedCount == 1;
+    }
+
+    // Retrieves all tickets assigned to the given user, It’s used for showing the “My Tickets” list for ServiceDesk employees
+    public async Task<IEnumerable<Ticket>> GetAssignedToUserAsync(string userId)
+    {
+        var filter = Builders<Ticket>.Filter.Eq(t => t.AssignedTo, userId);
+        return await _tickets.Find(filter).ToListAsync();
+    }
+
 }

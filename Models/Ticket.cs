@@ -36,6 +36,7 @@ namespace NoSQL_Project.Models
 
         [BsonElement("HandeledBy")]
         public List<HandlingInfo> HandledBy { get; set; } = new();
+        public string? AssignedTo { get; set; } // userId of the assignee (optional)
     }
 
     public class HandlingInfo
