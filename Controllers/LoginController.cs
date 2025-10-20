@@ -36,7 +36,6 @@ namespace NoSQL_Project.Controllers
             if (!ModelState.IsValid)
                 return View(loginModel);
 
-            // IMPORTANT: Prefer a service method that returns employee by email and a separate password verifier.
             EmployeeDetailsViewModel? employee = await _employeesService.AuthenticateAsync(loginModel);
             if (employee == null)
             {
@@ -44,7 +43,6 @@ namespace NoSQL_Project.Controllers
                 return View(loginModel);
             }
 
-            // create claims
             var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier, employee.Id ?? string.Empty),
@@ -58,16 +56,10 @@ namespace NoSQL_Project.Controllers
 
             await HttpContext.SignInAsync("MyCookie", principal, new AuthenticationProperties
             {
-                IsPersistent = true // or false depending on remember-me
+                IsPersistent = true
             });
 
-            // redirect based on role
-            return employee.Role switch
-            {
-                RoleType.ServiceDesk => RedirectToAction("Index", "Home"),
-                RoleType.Regular => RedirectToAction("Index", "Home"),
-                _ => RedirectToAction("Index", "Home")
-            };
+            return RedirectToAction("Index", "Home");
         }
 
         [HttpGet]
