@@ -9,7 +9,6 @@ public interface ITicketService
     Task CreateTicketAsync(Ticket ticket);
     Task UpdateTicketAsync(string id, Ticket ticket);
     Task DeleteTicketAsync(string id);
-    Task AssignTicketAsync(string id, Ticket ticket);
     Task<IEnumerable<Ticket>> GetForUserAsync(string userId);
     Task<bool> AssignAsync(string ticketId, string assigneeUserId);
 

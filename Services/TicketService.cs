@@ -39,17 +39,15 @@ public class TicketService : ITicketService
         await _ticketRepository.DeleteTicket(id);
     }
 
-    public async Task AssignTicketAsync(string id, Ticket ticket)
-    {
-        await _ticketRepository.UpdateTicket(id, ticket);
-    }
+
     public Task<IEnumerable<Ticket>> GetForUserAsync(string userId)
     => _ticketRepository.GetByReporterIdAsync(userId);
     public async Task<bool> AssignAsync(string ticketId, string assigneeUserId)
     {
         return await _ticketRepository.AssignAsync(ticketId, assigneeUserId);
     }
-    // SAdded a new feature to support the “My Tickets” page for ServiceDesk users.
+
+    // Added a new feature to support the “My Tickets” page for ServiceDesk users.
     // This includes a new method GetAssignedToUserAsync in both Repository and Service layers,
     //which returns all tickets currently assigned to the logged-in user.
     public async Task<IEnumerable<Ticket>> GetAssignedToUserAsync(string userId)

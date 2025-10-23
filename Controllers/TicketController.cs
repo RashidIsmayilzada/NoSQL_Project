@@ -20,7 +20,7 @@ namespace NoSQL_Project.Controllers
         private readonly IEmployeeService _employeeService;
         private readonly ILogger<TicketController> _logger;
 
-        public TicketController(ITicketService ticketService , IEmployeeService employeeService,  ILogger<TicketController> logger)
+        public TicketController(ITicketService ticketService, IEmployeeService employeeService, ILogger<TicketController> logger)
         {
             _ticketService = ticketService;
             _employeeService = employeeService;
@@ -154,6 +154,7 @@ namespace NoSQL_Project.Controllers
 
         // POST: /Ticket/Create
         [HttpPost]
+        [Authorize(Roles = "ServiceDesk,Employee")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(TicketCreateVM vm)
         {
@@ -196,65 +197,108 @@ namespace NoSQL_Project.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-        // GET: /Ticket/Edit/{id}  (هنوز با مدل دامِین کار می‌کنیم؛ بعداً اگر خواستی VM بده)
+        // GET: Ticket/Edit/{id}
         [HttpGet]
         public async Task<IActionResult> Edit(string id)
         {
-            if (string.IsNullOrWhiteSpace(id) || !ObjectId.TryParse(id, out _))
+            // چک کردن ورودی برای null
+            if (string.IsNullOrEmpty(id))
             {
-                TempData["Error"] = "Invalid ticket id.";
-                return RedirectToAction(nameof(Index));
+                TempData["Error"] = "Invalid ticket ID.";
+                return RedirectToAction("Index");
             }
 
-            var t = await _ticketService.GetTicketByIdAsync(id);
-            if (t == null)
+            // فراخوانی تیکت بر اساس ID از سرویس (متد درست = GetTicketByIdAsync)
+            var ticket = await _ticketService.GetTicketByIdAsync(id);
+            if (ticket == null)
             {
                 TempData["Error"] = "Ticket not found.";
-                return RedirectToAction(nameof(Index));
-            }
-            var isDesk = User.IsInRole(nameof(RoleType.ServiceDesk));
-            var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (!isDesk && t.ReportedBy != currentUserId)
-            {
-                TempData["Error"] = "You are not allowed to edit this ticket.";
-                return RedirectToAction(nameof(Index));
+                return RedirectToAction("Index");
             }
 
-            return View(t);
+            // ساخت ViewModel برای ویرایش
+            var model = new TicketEditVM
+            {
+                Id = ticket.Id,
+                Title = ticket.Title,
+                Description = ticket.Description,
+                Priority = ticket.Priority.ToString(),
+                Status = ticket.Status.ToString(),
+
+                // اگر مدل Ticket شامل HandlingInfo است، باید اینجا بررسی شود
+                // چون ممکن است داخلش Id به‌صورت مستقیم وجود نداشته باشد.
+                // در اینجا فرض شده که HandlingInfo شامل EmployeeId است.
+                HandledById = ticket.HandledBy?.FirstOrDefault()?.EmployeeId
+            };
+
+            // فقط نقش ServiceDesk حق دارد Dropdown مربوط به "Assign To" را ببیند
+            var role = HttpContext.Session.GetString("Role");
+            if (role == "ServiceDesk")
+            {
+                // متد درست برای گرفتن لیست کارمندان
+                var employees = await _employeeService.GetListAsync();
+
+                // پر کردن DropDown با نام و Id کارمندان
+                model.EmployeeOptions = employees.Select(e => new SelectListItem
+                {
+                    Value = e.Id,
+                    Text = $"{e.Name.FirstName} {e.Name.LastName}"
+                }).ToList();
+            }
+
+            return View(model);
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(Ticket ticket)
+        public async Task<IActionResult> Edit(TicketEditVM model)
         {
-            if (ticket == null || string.IsNullOrEmpty(ticket.Id) || !ObjectId.TryParse(ticket.Id, out _))
+            // بررسی اعتبار داده‌ها
+            if (!ModelState.IsValid)
             {
-                ModelState.AddModelError("", "Invalid ticket.");
-                return View(ticket);
+                TempData["Error"] = "Please fill in all required fields.";
+                return View(model);
             }
 
-            if (!ModelState.IsValid) return View(ticket);
-
-            // لود نسخه فعلی برای چک مالکیت
-            var existing = await _ticketService.GetTicketByIdAsync(ticket.Id);
-            if (existing == null)
+            // واکشی تیکت موجود از دیتابیس
+            var ticket = await _ticketService.GetTicketByIdAsync(model.Id);
+            if (ticket == null)
             {
                 TempData["Error"] = "Ticket not found.";
-                return RedirectToAction(nameof(Index));
+                return RedirectToAction("Index");
             }
 
-            var isDesk = User.IsInRole(nameof(RoleType.ServiceDesk));
-            var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (!isDesk && existing.ReportedBy != currentUserId)
+            // بروزرسانی فیلدهای اصلی تیکت با داده‌های جدید از فرم
+            ticket.Title = model.Title;
+            ticket.Description = model.Description;
+            ticket.Priority = Enum.Parse<TicketPriority>(model.Priority);
+            ticket.Status = Enum.Parse<TicketStatus>(model.Status);
+
+            // اگر نقش ServiceDesk باشد، کاربر می‌تواند فرد جدیدی را Assign کند
+            var role = HttpContext.Session.GetString("Role");
+            if (role == "ServiceDesk" && !string.IsNullOrEmpty(model.HandledById))
             {
-                TempData["Error"] = "You are not allowed to edit this ticket.";
-                return RedirectToAction(nameof(Index));
+                // فراخوانی سرویس برای واکشی اطلاعات کارمند مورد نظر
+                var emp = await _employeeService.GetDetailsAsync(model.HandledById);
+
+                if (emp != null)
+                {
+                    // ساخت لیست جدید برای فیلد HandledBy
+                    // این کار باعث می‌شود کاربر انتخاب‌شده مسئول این تیکت شود
+                    ticket.HandledBy = new List<HandlingInfo>
+{
+    new HandlingInfo { EmployeeId = emp.Id }
+};
+                }
             }
 
+            // ذخیره تغییرات در پایگاه داده (متد درست = UpdateTicketAsync)
             await _ticketService.UpdateTicketAsync(ticket.Id, ticket);
-            TempData["Success"] = "Ticket updated.";
-            return RedirectToAction(nameof(Index));
+
+            TempData["Success"] = "Ticket updated successfully!";
+            return RedirectToAction("Index");
         }
+
 
         // GET: /Ticket/Delete/{id}
         [HttpGet]
@@ -376,5 +420,4 @@ namespace NoSQL_Project.Controllers
     }
 }
 
-    
-  
+

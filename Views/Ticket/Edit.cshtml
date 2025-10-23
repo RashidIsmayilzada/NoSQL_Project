@@ -1,4 +1,5 @@
-﻿@model NoSQL_Project.Models.Ticket
+﻿@using NoSQL_Project.ViewModels.Tickets
+@model TicketEditVM
 @{
     ViewData["Title"] = "Edit Ticket";
 }
@@ -11,46 +12,73 @@
             <form asp-action="Edit" method="post" class="row g-3">
                 @Html.AntiForgeryToken()
                 @Html.ValidationSummary(true, "", new { @class = "text-danger" })
-                @Html.HiddenFor(m => m.Id) <!-- مهم: تا Edit کار کند -->
+                @Html.HiddenFor(m => m.Id)
 
+                <!-- Ticket Title -->
                 <div class="col-md-6">
                     <label asp-for="Title" class="form-label">Title</label>
                     <input asp-for="Title" class="form-control" />
                     <span asp-validation-for="Title" class="text-danger"></span>
                 </div>
 
-                <div class="col-md-3">
-                    <label asp-for="Type" class="form-label">Type</label>
-                    <select asp-for="Type" class="form-select" asp-items="Html.GetEnumSelectList<NoSQL_Project.Models.Enums.TicketType>()"></select>
-                </div>
-
+                <!-- Priority -->
                 <div class="col-md-3">
                     <label asp-for="Priority" class="form-label">Priority</label>
-                    <select asp-for="Priority" class="form-select" asp-items="Html.GetEnumSelectList<NoSQL_Project.Models.Enums.TicketPriority>()"></select>
+                    <select asp-for="Priority" class="form-select">
+                        <option value="">-- Select Priority --</option>
+                        <option value="Low" selected="@((Model.Priority == "Low") ? "selected" : null)">Low</option>
+                        <option value="Medium" selected="@((Model.Priority == "Medium") ? "selected" : null)">Medium</option>
+                        <option value="High" selected="@((Model.Priority == "High") ? "selected" : null)">High</option>
+                    </select>
+                    <span asp-validation-for="Priority" class="text-danger"></span>
                 </div>
 
-                <div class="col-md-4">
-                    <label asp-for="Deadline" class="form-label">Deadline</label>
-                    <input asp-for="Deadline" class="form-control" />
-                    <span asp-validation-for="Deadline" class="text-danger"></span>
-                </div>
-
-                <div class="col-md-4">
+                <!-- Status -->
+                <div class="col-md-3">
                     <label asp-for="Status" class="form-label">Status</label>
-                    <select asp-for="Status" class="form-select" asp-items="Html.GetEnumSelectList<NoSQL_Project.Models.Enums.TicketStatus>()"></select>
+                    <select asp-for="Status" class="form-select">
+                        <option value="">-- Select Status --</option>
+                        <option value="Open" selected="@((Model.Status == "Open") ? "selected" : null)">Open</option>
+                        <option value="InProgress" selected="@((Model.Status == "InProgress") ? "selected" : null)">In Progress</option>
+                        <option value="Closed" selected="@((Model.Status == "Closed") ? "selected" : null)">Closed</option>
+                    </select>
+                    <span asp-validation-for="Status" class="text-danger"></span>
                 </div>
 
+                <!-- Optional dropdown for ServiceDesk (assign to employee) -->
+                @if (Model.EmployeeOptions != null && Model.EmployeeOptions.Any())
+                {
+                    <div class="col-md-4">
+                        <label asp-for="HandledById" class="form-label">Assign To</label>
+                        <select asp-for="HandledById" asp-items="Model.EmployeeOptions" class="form-select">
+                            <option value="">-- Select Employee --</option>
+                        </select>
+                        <span asp-validation-for="HandledById" class="text-danger"></span>
+                    </div>
+                }
+
+                <!-- Description -->
                 <div class="col-12">
                     <label asp-for="Description" class="form-label">Description</label>
                     <textarea asp-for="Description" class="form-control" rows="4"></textarea>
                     <span asp-validation-for="Description" class="text-danger"></span>
                 </div>
 
+                <!-- Action buttons -->
                 <div class="col-12 d-flex gap-2">
-                    <button type="submit" class="btn btn-primary"><i class="bi bi-save me-1"></i>Save</button>
-                    <a asp-action="Index" class="btn btn-light"><i class="bi bi-x-circle me-1"></i>Cancel</a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-save me-1"></i>Save
+                    </button>
+                    <a asp-action="Index" class="btn btn-light">
+                        <i class="bi bi-x-circle me-1"></i>Cancel
+                    </a>
                 </div>
             </form>
         </div>
     </div>
 </div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
+
