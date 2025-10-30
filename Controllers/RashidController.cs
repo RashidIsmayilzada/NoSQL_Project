@@ -19,7 +19,7 @@ namespace NoSQL_Project.Controllers
             _logger = logger;
         }
 
-        // GET: /Ticket
+        // GET: /api/v1/Ticket
         [HttpGet]
         public async Task<IActionResult> Index()
         {
@@ -43,7 +43,7 @@ namespace NoSQL_Project.Controllers
             }
         }
 
-        // GET: /Ticket/Details/{id}
+        // GET: /api/v1/Ticket/Details/{id}
         [HttpGet]
         public async Task<IActionResult> Details(string id)
         {
@@ -90,14 +90,14 @@ namespace NoSQL_Project.Controllers
             }
         }
 
-        // GET: /Ticket/Create
+        // GET: /api/v1/Ticket/Create
         [HttpGet]
         public IActionResult Create()
         {
             return View();
         }
 
-        // POST: /Ticket/Create
+        // POST: /api/v1/Ticket/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(Ticket ticket)
@@ -137,7 +137,7 @@ namespace NoSQL_Project.Controllers
             }
         }
 
-        // GET: /Ticket/Edit/{id}
+        // GET: /api/v1/Ticket/Edit/{id}
         [HttpGet]
         public async Task<IActionResult> Edit(string id)
         {
@@ -184,7 +184,7 @@ namespace NoSQL_Project.Controllers
             }
         }
 
-        // POST: /Ticket/Edit
+        // POST: /api/v1/Ticket/Edit
         [HttpPost, ActionName("Edit")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(Ticket ticket, string reportedById)
@@ -262,7 +262,7 @@ namespace NoSQL_Project.Controllers
             }
         }
 
-        // GET: /Ticket/Delete/{id}
+        // GET: /api/v1/Ticket/Delete/{id}
         [HttpGet]
         public async Task<IActionResult> Delete(string id)
         {
@@ -309,7 +309,7 @@ namespace NoSQL_Project.Controllers
             }
         }
 
-        // POST: /Ticket/Delete
+        // POST: /api/v1/Ticket/Delete
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(string id)
