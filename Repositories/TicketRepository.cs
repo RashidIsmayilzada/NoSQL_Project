@@ -127,5 +127,18 @@ public class TicketRepository : ITicketRepository
         var filter = Builders<Ticket>.Filter.Eq(t => t.AssignedTo, userId);
         return await _tickets.Find(filter).ToListAsync();
     }
+    public async Task<bool> AssignTicketToEmployeeAsync(string ticketId, string employeeId)
+    {
+        var filter = Builders<Ticket>.Filter.Eq(t => t.Id, ticketId);
+        var update = Builders<Ticket>.Update.Push(t => t.HandledBy, new HandlingInfo
+        {
+            EmployeeId = employeeId,
+            Date = DateTime.Now.ToString("yyyy-MM-dd")
+        });
+
+        var result = await _tickets.UpdateOneAsync(filter, update);
+        return result.ModifiedCount == 1;
+    }
+
 
 }

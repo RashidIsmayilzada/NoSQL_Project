@@ -1,0 +1,26 @@
+﻿@{
+    ViewData["Title"] = "Assign Ticket";
+}
+
+<h2 class="text-primary">Assign Ticket</h2>
+
+<form asp-action="Assign" method="post">
+    @Html.AntiForgeryToken()
+    <input type="hidden" name="ticketId" value="@ViewBag.TicketId" />
+
+    <div class="mb-3">
+        <label for="employeeId" class="form-label">Select Employee</label>
+        <select id="employeeId" name="employeeId" class="form-select" required>
+            <option value="">-- Choose Employee --</option>
+            @foreach (var emp in (SelectList)ViewBag.Employees)
+            {
+                <option value="@emp.Value">@emp.Text</option>
+            }
+        </select>
+    </div>
+
+    <button type="submit" class="btn btn-primary">
+        <i class="bi bi-person-check"></i> Assign
+    </button>
+    <a asp-action="All" class="btn btn-outline-secondary">Cancel</a>
+</form>

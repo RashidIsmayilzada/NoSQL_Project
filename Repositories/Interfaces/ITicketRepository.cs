@@ -14,4 +14,5 @@ public interface ITicketRepository
 
     // Returns all tickets that are currently assigned to a specific user (by userId)
     Task<IEnumerable<Ticket>> GetAssignedToUserAsync(string userId);
+    Task<bool> AssignTicketToEmployeeAsync(string ticketId, string employeeId);
 }

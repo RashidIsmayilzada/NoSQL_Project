@@ -14,6 +14,7 @@ public interface ITicketService
 
     // Service layer: Gets all tickets assigned to a specific user
     Task<IEnumerable<Ticket>> GetAssignedToUserAsync(string userId);
+    Task<bool> AssignTicketAsync(string ticketId, string employeeId);
 
 
 }

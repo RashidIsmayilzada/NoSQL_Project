@@ -2,14 +2,12 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using MongoDB.Bson;
-using MongoDB.Driver;
 using NoSQL_Project.Models;
 using NoSQL_Project.Models.Enums;
-using NoSQL_Project.Services;
 using NoSQL_Project.Services.Interfaces;
 using NoSQL_Project.ViewModels.Employee;
-using System.Security.Claims;
 using NoSQL_Project.ViewModels.Tickets;
+using System.Security.Claims;
 
 namespace NoSQL_Project.Controllers
 {
@@ -27,49 +25,53 @@ namespace NoSQL_Project.Controllers
             _logger = logger;
         }
 
-
-
-
-        // GET: /Ticket
-        // GET: /Ticket → "My Tickets"
+        // -------------------- INDEX (My Tickets) --------------------
         [HttpGet]
         public async Task<IActionResult> Index()
         {
-            // Check if current user is ServiceDesk or normal employee
             var isDesk = User.IsInRole(nameof(RoleType.ServiceDesk));
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
-            // ServiceDesk → tickets assigned to them
-            // Normal user → tickets they reported
             IEnumerable<Ticket> tickets = isDesk
-                ? await _ticketService.GetAssignedToUserAsync(userId)  // new method you added
+                ? await _ticketService.GetAssignedToUserAsync(userId)
                 : await _ticketService.GetForUserAsync(userId);
 
-            // Map database tickets to view model items
-            var list = tickets.Select(t => new TicketListItemVM
-            {
-                Id = t.Id!,
-                Title = t.Title,
-                Status = t.Status,
-                Priority = t.Priority,
-                Deadline = t.Deadline,
-                ReporterName = "(hidden)",
-                AssigneeName = null  // if exists, otherwise null/"-"t.AssignedToDisplayName
-            });
+            var list = new List<TicketListItemVM>();
 
-            // Prepare view model
+            foreach (var t in tickets)
+            {
+                string? assigneeName = null;
+
+                if (t.HandledBy != null && t.HandledBy.Any())
+                {
+                    var emp = await _employeeService.GetDetailsAsync(t.HandledBy.First().EmployeeId);
+                    if (emp != null)
+                        assigneeName = $"{emp.Name.FirstName} {emp.Name.LastName}";
+                }
+
+                list.Add(new TicketListItemVM
+                {
+                    Id = t.Id!,
+                    Title = t.Title,
+                    Status = t.Status,
+                    Priority = t.Priority,
+                    Deadline = t.Deadline,
+                    ReporterName = "(hidden)",
+                    AssigneeName = assigneeName ?? "-"
+                });
+            }
+
             var vm = new TicketListVM
             {
                 Items = list,
                 IsServiceDesk = isDesk
             };
 
-            // "My" flag for the view title
             ViewBag.Scope = "My";
-
             return View("Index", vm);
         }
-        // GET: /Ticket/All  → "All Tickets" (ServiceDesk only)
+
+        // -------------------- ALL (ServiceDesk only) --------------------
         [HttpGet]
         public async Task<IActionResult> All()
         {
@@ -81,17 +83,30 @@ namespace NoSQL_Project.Controllers
             }
 
             var tickets = await _ticketService.GetAllTicketsAsync();
+            var list = new List<TicketListItemVM>();
 
-            var list = tickets.Select(t => new TicketListItemVM
+            foreach (var t in tickets)
             {
-                Id = t.Id!,
-                Title = t.Title,
-                Status = t.Status,
-                Priority = t.Priority,
-                Deadline = t.Deadline,
-                ReporterName = "(hidden)",
-                AssigneeName = null // اگر نمایش اسم لازم شد بعداً map می‌کنیم
-            });
+                string? assigneeName = null;
+
+                if (t.HandledBy != null && t.HandledBy.Any())
+                {
+                    var emp = await _employeeService.GetDetailsAsync(t.HandledBy.First().EmployeeId);
+                    if (emp != null)
+                        assigneeName = $"{emp.Name.FirstName} {emp.Name.LastName}";
+                }
+
+                list.Add(new TicketListItemVM
+                {
+                    Id = t.Id!,
+                    Title = t.Title,
+                    Status = t.Status,
+                    Priority = t.Priority,
+                    Deadline = t.Deadline,
+                    ReporterName = "(hidden)",
+                    AssigneeName = assigneeName ?? "-"
+                });
+            }
 
             var vm = new TicketListVM
             {
@@ -100,11 +115,10 @@ namespace NoSQL_Project.Controllers
             };
 
             ViewBag.Scope = "All";
-            return View("Index", vm); // از همان ویوی Index استفاده می‌کنیم
+            return View("Index", vm);
         }
 
-
-        // GET: /Ticket/Details/{id}
+        // -------------------- DETAILS --------------------
         [HttpGet]
         public async Task<IActionResult> Details(string id)
         {
@@ -121,6 +135,14 @@ namespace NoSQL_Project.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
+            string? assigneeName = null;
+            if (t.HandledBy != null && t.HandledBy.Any())
+            {
+                var emp = await _employeeService.GetDetailsAsync(t.HandledBy.First().EmployeeId);
+                if (emp != null)
+                    assigneeName = $"{emp.Name.FirstName} {emp.Name.LastName}";
+            }
+
             var vm = new TicketDetailsVM
             {
                 Id = t.Id!,
@@ -131,12 +153,13 @@ namespace NoSQL_Project.Controllers
                 Description = t.Description,
                 Status = t.Status,
                 ReporterName = "(hidden)",
-                AssigneeName = null
+                AssigneeName = assigneeName ?? "-"
             };
+
             return View(vm);
         }
 
-        // GET: /Ticket/Create
+        // -------------------- CREATE --------------------
         [HttpGet]
         public async Task<IActionResult> Create()
         {
@@ -152,7 +175,6 @@ namespace NoSQL_Project.Controllers
             return View(vm);
         }
 
-        // POST: /Ticket/Create
         [HttpPost]
         [Authorize(Roles = "ServiceDesk,Employee")]
         [ValidateAntiForgeryToken]
@@ -183,62 +205,46 @@ namespace NoSQL_Project.Controllers
                 ReportedBy = isDesk ? vm.ReportedBy : currentUserId
             };
 
-            if (isDesk && string.IsNullOrEmpty(ticket.ReportedBy))
-            {
-                ModelState.AddModelError(nameof(vm.ReportedBy), "Please select the reporter.");
-                var employees = await _employeeService.GetListAsync();
-                vm.ReporterOptions = employees.Select(e =>
-                    new SelectListItem(GetDisplayName(e), e.Id));
-                return View(vm);
-            }
-
             await _ticketService.CreateTicketAsync(ticket);
             TempData["Success"] = "Ticket created successfully!";
             return RedirectToAction(nameof(Index));
         }
-
-        // GET: Ticket/Edit/{id}
+        // GET: /Ticket/Edit/{id}
         [HttpGet]
+        [Authorize(Roles = nameof(RoleType.ServiceDesk))] // Only ServiceDesk can open the edit form
         public async Task<IActionResult> Edit(string id)
         {
-            // چک کردن ورودی برای null
-            if (string.IsNullOrEmpty(id))
+            // Validate id format (Mongo ObjectId)
+            if (string.IsNullOrWhiteSpace(id) || !ObjectId.TryParse(id, out _))
             {
                 TempData["Error"] = "Invalid ticket ID.";
-                return RedirectToAction("Index");
+                return RedirectToAction(nameof(Index));
             }
 
-            // فراخوانی تیکت بر اساس ID از سرویس (متد درست = GetTicketByIdAsync)
+            // Load ticket from service
             var ticket = await _ticketService.GetTicketByIdAsync(id);
             if (ticket == null)
             {
                 TempData["Error"] = "Ticket not found.";
-                return RedirectToAction("Index");
+                return RedirectToAction(nameof(Index));
             }
 
-            // ساخت ViewModel برای ویرایش
+            // Map model to the edit view-model
             var model = new TicketEditVM
             {
-                Id = ticket.Id,
+                Id = ticket.Id!,
                 Title = ticket.Title,
                 Description = ticket.Description,
-                Priority = ticket.Priority.ToString(),
-                Status = ticket.Status.ToString(),
-
-                // اگر مدل Ticket شامل HandlingInfo است، باید اینجا بررسی شود
-                // چون ممکن است داخلش Id به‌صورت مستقیم وجود نداشته باشد.
-                // در اینجا فرض شده که HandlingInfo شامل EmployeeId است.
+                Priority = ticket.Priority.ToString(), // enum -> string for dropdown
+                Status = ticket.Status.ToString(),     // enum -> string for dropdown
+                                                       // If you store handling history, preselect the first handler if present
                 HandledById = ticket.HandledBy?.FirstOrDefault()?.EmployeeId
             };
 
-            // فقط نقش ServiceDesk حق دارد Dropdown مربوط به "Assign To" را ببیند
-            var role = HttpContext.Session.GetString("Role");
-            if (role == "ServiceDesk")
+            // Only ServiceDesk sees the "Assign To" dropdown
+            if (User.IsInRole(nameof(RoleType.ServiceDesk)))
             {
-                // متد درست برای گرفتن لیست کارمندان
                 var employees = await _employeeService.GetListAsync();
-
-                // پر کردن DropDown با نام و Id کارمندان
                 model.EmployeeOptions = employees.Select(e => new SelectListItem
                 {
                     Value = e.Id,
@@ -249,128 +255,97 @@ namespace NoSQL_Project.Controllers
             return View(model);
         }
 
+        // POST: /Ticket/Edit
         [HttpPost]
+        [Authorize(Roles = nameof(RoleType.ServiceDesk))] // Only ServiceDesk can submit edits
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(TicketEditVM model)
         {
-            // بررسی اعتبار داده‌ها
+            // Server-side validation
             if (!ModelState.IsValid)
             {
                 TempData["Error"] = "Please fill in all required fields.";
+                // Rebuild dropdown if needed
+                if (User.IsInRole(nameof(RoleType.ServiceDesk)))
+                {
+                    var employees = await _employeeService.GetListAsync();
+                    model.EmployeeOptions = employees.Select(e => new SelectListItem
+                    {
+                        Value = e.Id,
+                        Text = $"{e.Name.FirstName} {e.Name.LastName}"
+                    }).ToList();
+                }
                 return View(model);
             }
 
-            // واکشی تیکت موجود از دیتابیس
+            // Load the existing ticket
             var ticket = await _ticketService.GetTicketByIdAsync(model.Id);
             if (ticket == null)
             {
                 TempData["Error"] = "Ticket not found.";
-                return RedirectToAction("Index");
+                return RedirectToAction(nameof(Index));
             }
 
-            // بروزرسانی فیلدهای اصلی تیکت با داده‌های جدید از فرم
+            // Map editable fields back to the domain model
             ticket.Title = model.Title;
             ticket.Description = model.Description;
             ticket.Priority = Enum.Parse<TicketPriority>(model.Priority);
             ticket.Status = Enum.Parse<TicketStatus>(model.Status);
 
-            // اگر نقش ServiceDesk باشد، کاربر می‌تواند فرد جدیدی را Assign کند
-            var role = HttpContext.Session.GetString("Role");
-            if (role == "ServiceDesk" && !string.IsNullOrEmpty(model.HandledById))
+            // Update assignee if ServiceDesk selected someone
+            if (User.IsInRole(nameof(RoleType.ServiceDesk)) && !string.IsNullOrEmpty(model.HandledById))
             {
-                // فراخوانی سرویس برای واکشی اطلاعات کارمند مورد نظر
-                var emp = await _employeeService.GetDetailsAsync(model.HandledById);
-
-                if (emp != null)
-                {
-                    // ساخت لیست جدید برای فیلد HandledBy
-                    // این کار باعث می‌شود کاربر انتخاب‌شده مسئول این تیکت شود
-                    ticket.HandledBy = new List<HandlingInfo>
-{
-    new HandlingInfo { EmployeeId = emp.Id }
-};
-                }
+                ticket.HandledBy = new List<HandlingInfo>
+        {
+            new HandlingInfo { EmployeeId = model.HandledById }
+        };
             }
 
-            // ذخیره تغییرات در پایگاه داده (متد درست = UpdateTicketAsync)
-            await _ticketService.UpdateTicketAsync(ticket.Id, ticket);
+            // Persist changes
+            await _ticketService.UpdateTicketAsync(ticket.Id!, ticket);
 
             TempData["Success"] = "Ticket updated successfully!";
-            return RedirectToAction("Index");
-        }
-
-
-        // GET: /Ticket/Delete/{id}
-        [HttpGet]
-        public async Task<IActionResult> Delete(string id)
-        {
-            if (string.IsNullOrWhiteSpace(id) || !ObjectId.TryParse(id, out _))
-            {
-                TempData["Error"] = "Invalid ticket id.";
-                return RedirectToAction(nameof(Index));
-            }
-
-            var t = await _ticketService.GetTicketByIdAsync(id);
-            if (t == null)
-            {
-                TempData["Error"] = "Ticket not found.";
-                return RedirectToAction(nameof(Index));
-
-            }
-            var isDesk = User.IsInRole(nameof(RoleType.ServiceDesk));
-            var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (!isDesk && t.ReportedBy != currentUserId)
-            {
-                TempData["Error"] = "You are not allowed to delete this ticket.";
-                return RedirectToAction(nameof(Index));
-            }
-            return View(t);
-        }
-
-        [HttpPost, ActionName("Delete")]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed(string id)
-        {
-            if (string.IsNullOrWhiteSpace(id) || !ObjectId.TryParse(id, out _))
-            {
-                TempData["Error"] = "Invalid ticket id.";
-                return RedirectToAction(nameof(Index));
-            }
-            var t = await _ticketService.GetTicketByIdAsync(id);
-            if (t == null)
-            {
-                TempData["Error"] = "Ticket not found.";
-                return RedirectToAction(nameof(Index));
-            }
-
-            var isDesk = User.IsInRole(nameof(RoleType.ServiceDesk));
-            var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (!isDesk && t.ReportedBy != currentUserId)
-            {
-                TempData["Error"] = "You are not allowed to delete this ticket.";
-                return RedirectToAction(nameof(Index));
-            }
-
-
-            await _ticketService.DeleteTicketAsync(id);
-            TempData["Success"] = "Ticket deleted.";
             return RedirectToAction(nameof(Index));
         }
 
-        // helper
-        private static string GetDisplayName(EmployeeListViewModel e)
+
+        // -------------------- ASSIGN --------------------
+        [HttpGet]
+        [Authorize(Roles = nameof(RoleType.ServiceDesk))]
+        public async Task<IActionResult> Assign(string id)
         {
-            var fullName = $"{e.Name?.FirstName} {e.Name?.LastName}".Trim();
-            return !string.IsNullOrWhiteSpace(fullName) ? $"{fullName} ({e.Email})" : (e.Email ?? e.Id);
+            var employees = await _employeeService.GetListAsync();
+            ViewBag.Employees = new SelectList(employees, "Id", "Name.FirstName");
+            ViewBag.TicketId = id;
+            return View();
         }
 
+        [HttpPost]
+        [Authorize(Roles = nameof(RoleType.ServiceDesk))]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Assign(string id, string assigneeId)
+        {
+            if (string.IsNullOrWhiteSpace(id) || !ObjectId.TryParse(id, out _))
+            {
+                TempData["Error"] = "Invalid ticket id.";
+                return RedirectToAction(nameof(Index));
+            }
+            if (string.IsNullOrWhiteSpace(assigneeId))
+            {
+                TempData["Error"] = "Please choose an assignee.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            var ok = await _ticketService.AssignAsync(id, assigneeId);
+            TempData[ok ? "Success" : "Error"] = ok ? "Assigned successfully." : "Assign failed.";
+            return RedirectToAction(nameof(Index));
+        }
 
         [HttpPost]
         [Authorize(Roles = nameof(RoleType.ServiceDesk))]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> AssignToMe(string id, string? returnTo = null)
         {
-            // validate id
             if (string.IsNullOrWhiteSpace(id) || !ObjectId.TryParse(id, out _))
             {
                 TempData["Error"] = "Invalid ticket id.";
@@ -387,37 +362,62 @@ namespace NoSQL_Project.Controllers
             var ok = await _ticketService.AssignAsync(id, myId);
             TempData[ok ? "Success" : "Error"] = ok ? "Assigned to you." : "Assign failed.";
 
-            // keep user in the same list if we passed returnTo=All
             if (string.Equals(returnTo, "All", StringComparison.OrdinalIgnoreCase))
                 return RedirectToAction(nameof(All));
 
-            return RedirectToAction(nameof(Index)); // default: My Tickets
+            return RedirectToAction(nameof(Index));
         }
 
-
-        // اگر خواستی بعداً برای انتخاب فرد دیگر هم بگذاری:
-        [HttpPost]
-        [Authorize(Roles = nameof(RoleType.ServiceDesk))]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Assign(string id, string assigneeId)
+        // -------------------- DELETE --------------------
+        [HttpGet]
+        public async Task<IActionResult> Delete(string id)
         {
-            if (string.IsNullOrWhiteSpace(id) || !MongoDB.Bson.ObjectId.TryParse(id, out _))
+            if (string.IsNullOrWhiteSpace(id) || !ObjectId.TryParse(id, out _))
             {
                 TempData["Error"] = "Invalid ticket id.";
                 return RedirectToAction(nameof(Index));
             }
-            if (string.IsNullOrWhiteSpace(assigneeId))
+
+            var t = await _ticketService.GetTicketByIdAsync(id);
+            if (t == null)
             {
-                TempData["Error"] = "Please choose an assignee.";
+                TempData["Error"] = "Ticket not found.";
                 return RedirectToAction(nameof(Index));
             }
 
-            var ok = await _ticketService.AssignAsync(id, assigneeId);
-            TempData[ok ? "Success" : "Error"] = ok ? "Assigned successfully." : "Assign failed.";
+            var isDesk = User.IsInRole(nameof(RoleType.ServiceDesk));
+            var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!isDesk && t.ReportedBy != currentUserId)
+            {
+                TempData["Error"] = "You are not allowed to delete this ticket.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            return View(t);
+        }
+
+        [HttpPost, ActionName("Delete")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteConfirmed(string id)
+        {
+            if (string.IsNullOrWhiteSpace(id) || !ObjectId.TryParse(id, out _))
+            {
+                TempData["Error"] = "Invalid ticket id.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            await _ticketService.DeleteTicketAsync(id);
+            TempData["Success"] = "Ticket deleted.";
             return RedirectToAction(nameof(Index));
         }
 
+        // -------------------- Helper --------------------
+        private static string GetDisplayName(EmployeeListViewModel e)
+        {
+            var fullName = $"{e.Name?.FirstName} {e.Name?.LastName}".Trim();
+            return !string.IsNullOrWhiteSpace(fullName)
+                ? $"{fullName} ({e.Email})"
+                : (e.Email ?? e.Id);
+        }
     }
 }
-
-
