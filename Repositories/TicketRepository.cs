@@ -112,14 +112,7 @@ public class TicketRepository : ITicketRepository
         var filter = Builders<Ticket>.Filter.Eq(t => t.ReportedBy, userId);
         return await _tickets.Find(filter).ToListAsync();
     }
-    public async Task<bool> AssignAsync(string ticketId, string assigneeUserId)
-    {
-        var filter = Builders<Ticket>.Filter.Eq(t => t.Id, ticketId);
-        var update = Builders<Ticket>.Update.Set(t => t.AssignedTo, assigneeUserId);
 
-        var res = await _tickets.UpdateOneAsync(filter, update);
-        return res.MatchedCount == 1;
-    }
 
     // Retrieves all tickets assigned to the given user, It’s used for showing the “My Tickets” list for ServiceDesk employees
     public async Task<IEnumerable<Ticket>> GetAssignedToUserAsync(string userId)
@@ -127,18 +120,47 @@ public class TicketRepository : ITicketRepository
         var filter = Builders<Ticket>.Filter.Eq(t => t.AssignedTo, userId);
         return await _tickets.Find(filter).ToListAsync();
     }
-    public async Task<bool> AssignTicketToEmployeeAsync(string ticketId, string employeeId)
+
+    public async Task<bool> AssignAsync(string ticketId, string assigneeUserId)
     {
         var filter = Builders<Ticket>.Filter.Eq(t => t.Id, ticketId);
-        var update = Builders<Ticket>.Update.Push(t => t.HandledBy, new HandlingInfo
-        {
-            EmployeeId = employeeId,
-            Date = DateTime.Now.ToString("yyyy-MM-dd")
-        });
 
-        var result = await _tickets.UpdateOneAsync(filter, update);
-        return result.ModifiedCount == 1;
+        var handlingInfo = new HandlingInfo
+        {
+            EmployeeId = assigneeUserId,
+            Date = DateTime.UtcNow.ToString("yyyy-MM-dd")
+        };
+
+        var update = Builders<Ticket>.Update
+            .Set(t => t.AssignedTo, assigneeUserId)
+            .Push(t => t.HandledBy, handlingInfo);
+
+        var res = await _tickets.UpdateOneAsync(filter, update);
+        return res.MatchedCount == 1 && res.ModifiedCount == 1;
     }
+
+
+
+    /* public async Task<bool> AssignTicketToEmployeeAsync(string ticketId, string employeeId)
+     {
+         var filter = Builders<Ticket>.Filter.Eq(t => t.Id, ticketId);
+         var update = Builders<Ticket>.Update.Push(t => t.HandledBy, new HandlingInfo
+         {
+             EmployeeId = employeeId,
+             Date = DateTime.Now.ToString("yyyy-MM-dd")
+         });
+
+         var result = await _tickets.UpdateOneAsync(filter, update);
+         return result.ModifiedCount == 1;
+     }*/
+    /* public async Task<bool> AssignAsync(string ticketId, string assigneeUserId)
+  {
+      var filter = Builders<Ticket>.Filter.Eq(t => t.Id, ticketId);
+      var update = Builders<Ticket>.Update.Set(t => t.AssignedTo, assigneeUserId);
+
+      var res = await _tickets.UpdateOneAsync(filter, update);
+      return res.MatchedCount == 1;
+  }*/
 
 
 }

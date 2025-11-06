@@ -11,4 +11,7 @@ public class TicketListItemVM
     public string Deadline { get; set; } = "";  // یا DateTime? اگر مدل را تغییر دادی
     public string ReporterName { get; set; } = "";   // فقط نام ترکیبی
     public string? AssigneeName { get; set; }        // اگر assign شد
+
+    public bool IsAssignedToCurrentUser { get; set; }
+
 }

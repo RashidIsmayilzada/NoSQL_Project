@@ -54,10 +54,11 @@ public class TicketService : ITicketService
     {
         return await _ticketRepository.GetAssignedToUserAsync(userId);
     }
-    public async Task<bool> AssignTicketAsync(string ticketId, string employeeId)
+
+   /* public async Task<bool> AssignTicketAsync(string ticketId, string employeeId)
     {
         return await _ticketRepository.AssignTicketToEmployeeAsync(ticketId, employeeId);
-    }
+    }*/
 
 
 

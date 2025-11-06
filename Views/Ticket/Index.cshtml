@@ -7,7 +7,28 @@
     var returnToAll = string.Equals(scope, "All", StringComparison.OrdinalIgnoreCase);
 }
 
-<div class="container-fluid py-3">
+<style>
+    /* فقط همین صفحه */
+    .tickets .table thead th {
+        white-space: nowrap;
+    }
+
+    .tickets .td-deadline,
+    .tickets .td-assignee,
+    .tickets .td-actions {
+        white-space: nowrap;
+    }
+
+    .tickets .td-actions {
+        width: 380px;
+    }
+    /* جای کافی برای 3 دکمه + فرم */
+    .tickets .table td, .tickets .table th {
+        vertical-align: middle;
+    }
+</style>
+
+<div class="container-fluid py-3 tickets">
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h2 class="fw-semibold mb-0 text-primary">
             <i class="bi bi-ticket-perforated me-2"></i> @ViewData["Title"]
@@ -27,7 +48,7 @@
         }
     </div>
 
-    <!-- Desktop / Tablet View -->
+    <!-- Desktop / Tablet -->
     <div class="d-none d-md-block">
         <div class="card shadow-sm border-0 rounded-4 overflow-hidden">
             <div class="table-responsive">
@@ -39,7 +60,7 @@
                             <th>Priority</th>
                             <th>Deadline</th>
                             <th>Assignee</th>
-                            <th style="width:360px" class="text-center">Actions</th>
+                            <th class="text-center">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -49,10 +70,10 @@
                                 <td>@t.Title</td>
                                 <td><span class="badge bg-secondary">@t.Status</span></td>
                                 <td><span class="badge bg-info text-dark">@t.Priority</span></td>
-                                <td>@t.Deadline</td>
-                                <td>@(string.IsNullOrWhiteSpace(t.AssigneeName) ? "-" : t.AssigneeName)</td>
-                                <td class="text-center">
-                                    <div class="btn-group">
+                                <td class="td-deadline">@t.Deadline</td>
+                                <td class="td-assignee">@(string.IsNullOrWhiteSpace(t.AssigneeName) ? "-" : t.AssigneeName)</td>
+                                <td class="td-actions text-center">
+                                    <div class="d-inline-flex align-items-center gap-2">
                                         <a class="btn btn-outline-primary btn-sm" asp-action="Details" asp-route-id="@t.Id">
                                             <i class="bi bi-info-circle"></i> Details
                                         </a>
@@ -63,17 +84,20 @@
                                             <i class="bi bi-trash"></i> Delete
                                         </a>
 
-                                        @* ✅ فقط ServiceDesk *@
                                         @if (Model.IsServiceDesk)
                                         {
-                                            @* اگر کسی assign نشده *@
-                                            @if (string.IsNullOrWhiteSpace(t.AssigneeName))
+                                            if (t.IsAssignedToCurrentUser)
                                             {
-                                                <!-- Assign to me -->
+                                                <span class="badge bg-success">
+                                                    <i class="bi bi-check-circle"></i> Assigned to you
+                                                </span>
+                                            }
+                                            else if (string.IsNullOrWhiteSpace(t.AssigneeName))
+                                            {
                                                 <form asp-action="AssignToMe"
                                                       asp-controller="Ticket"
                                                       method="post"
-                                                      class="d-inline ms-1"
+                                                      class="d-inline"
                                                       asp-route-id="@t.Id"
                                                       asp-route-returnTo="@(returnToAll ? "All" : null)">
                                                     @Html.AntiForgeryToken()
@@ -82,8 +106,7 @@
                                                     </button>
                                                 </form>
 
-                                                <!-- Assign to another employee -->
-                                                <a class="btn btn-outline-primary btn-sm ms-1"
+                                                <a class="btn btn-outline-primary btn-sm"
                                                    asp-action="Assign"
                                                    asp-route-id="@t.Id">
                                                     <i class="bi bi-person-plus"></i> Assign
@@ -91,7 +114,7 @@
                                             }
                                             else
                                             {
-                                                <span class="badge bg-success ms-2">
+                                                <span class="badge bg-success">
                                                     <i class="bi bi-check-circle"></i> Assigned
                                                 </span>
                                             }
@@ -110,7 +133,7 @@
         </div>
     </div>
 
-    <!-- Mobile View -->
+    <!-- Mobile -->
     <div class="d-md-none mt-3">
         <div class="vstack gap-3">
             @foreach (var t in Model.Items)
@@ -120,7 +143,7 @@
                         <div class="d-flex justify-content-between align-items-start">
                             <div>
                                 <div class="fw-semibold">@t.Title</div>
-                                <div class="small text-muted">
+                                <div class="small text-muted text-nowrap">
                                     <i class="bi bi-calendar"></i> @t.Deadline
                                 </div>
                             </div>
@@ -131,7 +154,7 @@
                             <span class="badge bg-info text-dark"><i class="bi bi-flag"></i> @t.Priority</span>
                             @if (!string.IsNullOrWhiteSpace(t.AssigneeName))
                             {
-                                <span class="badge bg-dark-subtle text-dark">
+                                <span class="badge bg-dark-subtle text-dark text-nowrap">
                                     <i class="bi bi-person-check"></i> @t.AssigneeName
                                 </span>
                             }
@@ -148,25 +171,40 @@
                                 <i class="bi bi-trash me-1"></i> Delete
                             </a>
 
-                            @if (Model.IsServiceDesk && string.IsNullOrWhiteSpace(t.AssigneeName))
+                            @if (Model.IsServiceDesk)
                             {
-                                <form asp-action="AssignToMe"
-                                      asp-controller="Ticket"
-                                      method="post"
-                                      class="flex-fill d-inline"
-                                      asp-route-id="@t.Id"
-                                      asp-route-returnTo="@(returnToAll ? "All" : null)">
-                                    @Html.AntiForgeryToken()
-                                    <button type="submit" class="btn btn-outline-dark btn-sm w-100">
-                                        <i class="bi bi-person-check"></i> Assign to me
-                                    </button>
-                                </form>
+                                if (t.IsAssignedToCurrentUser)
+                                {
+                                    <span class="badge bg-success w-100 text-center">
+                                        <i class="bi bi-check-circle"></i> Assigned to you
+                                    </span>
+                                }
+                                else if (string.IsNullOrWhiteSpace(t.AssigneeName))
+                                {
+                                    <form asp-action="AssignToMe"
+                                          asp-controller="Ticket"
+                                          method="post"
+                                          class="flex-fill d-inline"
+                                          asp-route-id="@t.Id"
+                                          asp-route-returnTo="@(returnToAll ? "All" : null)">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="btn btn-outline-dark btn-sm w-100">
+                                            <i class="bi bi-person-check"></i> Assign to me
+                                        </button>
+                                    </form>
 
-                                <a class="btn btn-outline-primary btn-sm flex-fill w-100"
-                                   asp-action="Assign"
-                                   asp-route-id="@t.Id">
-                                    <i class="bi bi-person-plus"></i> Assign
-                                </a>
+                                    <a class="btn btn-outline-primary btn-sm flex-fill w-100"
+                                       asp-action="Assign"
+                                       asp-route-id="@t.Id">
+                                        <i class="bi bi-person-plus"></i> Assign
+                                    </a>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-success w-100 text-center">
+                                        <i class="bi bi-check-circle"></i> Assigned
+                                    </span>
+                                }
                             }
                         </div>
                     </div>

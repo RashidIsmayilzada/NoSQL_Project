@@ -4,5 +4,6 @@
     {
         public IEnumerable<TicketListItemVM> Items { get; set; } = Enumerable.Empty<TicketListItemVM>();
         public bool IsServiceDesk { get; set; } // برای نمایش دکمه‌های اضافی
+
     }
 }
