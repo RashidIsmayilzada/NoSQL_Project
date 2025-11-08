@@ -482,6 +482,7 @@ namespace NoSQL_Project.Controllers
 
         // ---------- Delete (GET) ----------
         [HttpGet]
+        [Authorize(Roles = nameof(RoleType.ServiceDesk))]
         public async Task<IActionResult> Delete(string id)
         {
             try
@@ -517,8 +518,8 @@ namespace NoSQL_Project.Controllers
             }
         }
 
-        // ---------- Delete (POST) ----------
         [HttpPost, ActionName("Delete")]
+        [Authorize(Roles = nameof(RoleType.ServiceDesk))]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(string id)
         {

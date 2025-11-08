@@ -20,11 +20,16 @@
     }
 
     .tickets .td-actions {
-        width: 380px;
+        width: 520px;
     }
-    /* جای کافی برای 3 دکمه + فرم */
+    /* جا برای دکمه‌ها + منو */
     .tickets .table td, .tickets .table th {
         vertical-align: middle;
+    }
+
+    .dropdown-item.disabled, .dropdown-item:disabled {
+        color: #6c757d;
+        pointer-events: none;
     }
 </style>
 
@@ -72,6 +77,7 @@
                                 <td><span class="badge bg-info text-dark">@t.Priority</span></td>
                                 <td class="td-deadline">@t.Deadline</td>
                                 <td class="td-assignee">@(string.IsNullOrWhiteSpace(t.AssigneeName) ? "-" : t.AssigneeName)</td>
+
                                 <td class="td-actions text-center">
                                     <div class="d-inline-flex align-items-center gap-2">
                                         <a class="btn btn-outline-primary btn-sm" asp-action="Details" asp-route-id="@t.Id">
@@ -80,44 +86,70 @@
                                         <a class="btn btn-outline-secondary btn-sm" asp-action="Edit" asp-route-id="@t.Id">
                                             <i class="bi bi-pencil-square"></i> Edit
                                         </a>
-                                        <a class="btn btn-outline-danger btn-sm" asp-action="Delete" asp-route-id="@t.Id">
-                                            <i class="bi bi-trash"></i> Delete
-                                        </a>
 
+                                        @* Delete فقط برای ServiceDesk *@
                                         @if (Model.IsServiceDesk)
                                         {
-                                            if (t.IsAssignedToCurrentUser)
-                                            {
-                                                <span class="badge bg-success">
-                                                    <i class="bi bi-check-circle"></i> Assigned to you
-                                                </span>
-                                            }
-                                            else if (string.IsNullOrWhiteSpace(t.AssigneeName))
-                                            {
-                                                <form asp-action="AssignToMe"
-                                                      asp-controller="Ticket"
-                                                      method="post"
-                                                      class="d-inline"
-                                                      asp-route-id="@t.Id"
-                                                      asp-route-returnTo="@(returnToAll ? "All" : null)">
-                                                    @Html.AntiForgeryToken()
-                                                    <button type="submit" class="btn btn-outline-dark btn-sm">
-                                                        <i class="bi bi-person-check"></i> Assign to me
-                                                    </button>
-                                                </form>
+                                            <a class="btn btn-outline-danger btn-sm" asp-action="Delete" asp-route-id="@t.Id">
+                                                <i class="bi bi-trash"></i> Delete
+                                            </a>
+                                        }
 
-                                                <a class="btn btn-outline-primary btn-sm"
-                                                   asp-action="Assign"
-                                                   asp-route-id="@t.Id">
-                                                    <i class="bi bi-person-plus"></i> Assign
-                                                </a>
-                                            }
-                                            else
-                                            {
-                                                <span class="badge bg-success">
-                                                    <i class="bi bi-check-circle"></i> Assigned
-                                                </span>
-                                            }
+                                        @* دکمه Assign + منوی فشرده *@
+                                        @if (Model.IsServiceDesk)
+                                        {
+                                            <div class="btn-group">
+                                                <button type="button" class="btn btn-outline-dark btn-sm dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                                                    <i class="bi bi-people"></i> Assign
+                                                </button>
+                                                <ul class="dropdown-menu dropdown-menu-end">
+                                                    @* حالت‌های مختلف *@
+                                                    @if (!string.IsNullOrWhiteSpace(t.AssigneeName))
+                                                    {
+                                                        <li>
+                                                            <span class="dropdown-item disabled">
+                                                                <i class="bi bi-person-check"></i>
+                                                                Current: @t.AssigneeName
+                                                            </span>
+                                                        </li>
+                                                        <li><hr class="dropdown-divider" /></li>
+                                                    }
+
+                                                    @if (!t.IsAssignedToCurrentUser)
+                                                    {
+                                                        <li>
+                                                            <form asp-action="AssignToMe"
+                                                                  asp-controller="Ticket"
+                                                                  method="post"
+                                                                  class="px-2 py-1"
+                                                                  asp-route-id="@t.Id"
+                                                                  asp-route-returnTo="@(returnToAll ? "All" : null)">
+                                                                @Html.AntiForgeryToken()
+                                                                <button type="submit" class="dropdown-item">
+                                                                    <i class="bi bi-person-check"></i> Assign to me
+                                                                </button>
+                                                            </form>
+                                                        </li>
+                                                    }
+                                                    else
+                                                    {
+                                                        <li>
+                                                            <span class="dropdown-item disabled">
+                                                                <i class="bi bi-check-circle"></i> Assigned to you
+                                                            </span>
+                                                        </li>
+                                                    }
+
+                                                    <li>
+                                                        <a class="dropdown-item" asp-action="Assign" asp-route-id="@t.Id">
+                                                            <i class="bi bi-person-plus"></i> Assign to someone…
+                                                        </a>
+                                                    </li>
+
+                                                    @* Unassign عمداً حذف شد *@
+                                                    @* <li><a class="dropdown-item text-danger" ...>Unassign</a></li> *@
+                                                </ul>
+                                            </div>
                                         }
                                     </div>
                                 </td>
@@ -160,51 +192,68 @@
                             }
                         </div>
 
-                        <div class="d-flex flex-wrap gap-2 mt-3">
+                        <div class="d-flex flex-wrap gap-2 mt-3 align-items-center">
                             <a class="btn btn-outline-primary btn-sm flex-fill" asp-action="Details" asp-route-id="@t.Id">
                                 <i class="bi bi-info-circle me-1"></i> Details
                             </a>
                             <a class="btn btn-outline-secondary btn-sm flex-fill" asp-action="Edit" asp-route-id="@t.Id">
                                 <i class="bi bi-pencil-square me-1"></i> Edit
                             </a>
-                            <a class="btn btn-outline-danger btn-sm flex-fill" asp-action="Delete" asp-route-id="@t.Id">
-                                <i class="bi bi-trash me-1"></i> Delete
-                            </a>
 
                             @if (Model.IsServiceDesk)
                             {
-                                if (t.IsAssignedToCurrentUser)
-                                {
-                                    <span class="badge bg-success w-100 text-center">
-                                        <i class="bi bi-check-circle"></i> Assigned to you
-                                    </span>
-                                }
-                                else if (string.IsNullOrWhiteSpace(t.AssigneeName))
-                                {
-                                    <form asp-action="AssignToMe"
-                                          asp-controller="Ticket"
-                                          method="post"
-                                          class="flex-fill d-inline"
-                                          asp-route-id="@t.Id"
-                                          asp-route-returnTo="@(returnToAll ? "All" : null)">
-                                        @Html.AntiForgeryToken()
-                                        <button type="submit" class="btn btn-outline-dark btn-sm w-100">
-                                            <i class="bi bi-person-check"></i> Assign to me
-                                        </button>
-                                    </form>
+                                <a class="btn btn-outline-danger btn-sm flex-fill" asp-action="Delete" asp-route-id="@t.Id">
+                                    <i class="bi bi-trash me-1"></i> Delete
+                                </a>
 
-                                    <a class="btn btn-outline-primary btn-sm flex-fill w-100"
-                                       asp-action="Assign"
-                                       asp-route-id="@t.Id">
-                                        <i class="bi bi-person-plus"></i> Assign
-                                    </a>
-                                }
-                                else
-                                {
-                                    <span class="badge bg-success w-100 text-center">
-                                        <i class="bi bi-check-circle"></i> Assigned
-                                    </span>
-                                }
+                                <div class="dropup flex-fill">
+                                    <button type="button" class="btn btn-outline-dark btn-sm w-100 dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                                        <i class="bi bi-people"></i> Assign
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-end">
+                                        @if (!string.IsNullOrWhiteSpace(t.AssigneeName))
+                                        {
+                                            <li>
+                                                <span class="dropdown-item disabled">
+                                                    <i class="bi bi-person-check"></i>
+                                                    Current: @t.AssigneeName
+                                                </span>
+                                            </li>
+                                            <li><hr class="dropdown-divider" /></li>
+                                        }
+
+                                        @if (!t.IsAssignedToCurrentUser)
+                                        {
+                                            <li>
+                                                <form asp-action="AssignToMe"
+                                                      asp-controller="Ticket"
+                                                      method="post"
+                                                      class="px-2 py-1"
+                                                      asp-route-id="@t.Id"
+                                                      asp-route-returnTo="@(returnToAll ? "All" : null)">
+                                                    @Html.AntiForgeryToken()
+                                                    <button type="submit" class="dropdown-item">
+                                                        <i class="bi bi-person-check"></i> Assign to me
+                                                    </button>
+                                                </form>
+                                            </li>
+                                        }
+                                        else
+                                        {
+                                            <li>
+                                                <span class="dropdown-item disabled">
+                                                    <i class="bi bi-check-circle"></i> Assigned to you
+                                                </span>
+                                            </li>
+                                        }
+
+                                        <li>
+                                            <a class="dropdown-item" asp-action="Assign" asp-route-id="@t.Id">
+                                                <i class="bi bi-person-plus"></i> Assign to someone…
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </div>
                             }
                         </div>
                     </div>

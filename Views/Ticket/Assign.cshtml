@@ -2,25 +2,26 @@
     ViewData["Title"] = "Assign Ticket";
 }
 
-<h2 class="text-primary">Assign Ticket</h2>
+<h3 class="mb-3">Assign Ticket</h3>
 
-<form asp-action="Assign" method="post">
+<form asp-action="Assign" asp-controller="Ticket" method="post" class="vstack gap-3">
     @Html.AntiForgeryToken()
-    <input type="hidden" name="ticketId" value="@ViewBag.TicketId" />
 
-    <div class="mb-3">
-        <label for="employeeId" class="form-label">Select Employee</label>
-        <select id="employeeId" name="employeeId" class="form-select" required>
-            <option value="">-- Choose Employee --</option>
-            @foreach (var emp in (SelectList)ViewBag.Employees)
-            {
-                <option value="@emp.Value">@emp.Text</option>
-            }
+    <!-- حتما یکی از این دو راه id را به اکشن برساند -->
+    <input type="hidden" name="id" value="@ViewBag.TicketId" />
+
+    <div>
+        <label for="assigneeId" class="form-label">Select Employee</label>
+        <!-- بسیار مهم: name و id دقیقا assigneeId باشد -->
+        <select id="assigneeId" name="assigneeId" class="form-select" asp-items="ViewBag.Employees">
+            <option value="">-- Select --</option>
         </select>
     </div>
 
-    <button type="submit" class="btn btn-primary">
-        <i class="bi bi-person-check"></i> Assign
-    </button>
-    <a asp-action="All" class="btn btn-outline-secondary">Cancel</a>
+    <div class="d-flex gap-2">
+        <button type="submit" class="btn btn-primary">
+            <i class="bi bi-person-plus"></i> Assign
+        </button>
+        <a asp-action="Index" class="btn btn-outline-secondary">Cancel</a>
+    </div>
 </form>
