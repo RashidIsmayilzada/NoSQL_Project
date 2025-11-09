@@ -15,12 +15,14 @@ namespace NoSQL_Project.Controllers
     public class TicketController : Controller
     {
         private readonly ITicketService _ticketService;
+        private readonly ITicketSearchService _ticketSearchService; //////
         private readonly IEmployeeService _employeeService;
         private readonly ILogger<TicketController> _logger;
 
-        public TicketController(ITicketService ticketService, IEmployeeService employeeService, ILogger<TicketController> logger)
+        public TicketController(ITicketService ticketService, ITicketSearchService ticketSearchService, IEmployeeService employeeService, ILogger<TicketController> logger)
         {
             _ticketService = ticketService;
+            _ticketSearchService = ticketSearchService;
             _employeeService = employeeService;
             _logger = logger;
         }
@@ -287,10 +289,10 @@ namespace NoSQL_Project.Controllers
                     Description = ticket.Description,
                     Priority = ticket.Priority.ToString(),
                     Status = ticket.Status.ToString(),
-                    HandledById = ResolveAssigneeId(ticket) // همون helper بالای کنترلر
+                    HandledById = ResolveAssigneeId(ticket) // same helper above the controller
                 };
 
-                // فقط ServiceDesk لیست assign می‌بیند
+                // Only ServiceDesk sees the assign list
                 if (isDesk)
                 {
                     var employees = await _employeeService.GetListAsync();
@@ -314,7 +316,7 @@ namespace NoSQL_Project.Controllers
 
         // ---------- Edit (POST) ----------
         [HttpPost]
-        [Authorize] // فقط لاگین؛ نقش/مالکیت پایین چک می‌شود
+        [Authorize] // only login; role/ownership is checked below
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(TicketEditVM model)
         {
@@ -323,7 +325,7 @@ namespace NoSQL_Project.Controllers
                 if (!ModelState.IsValid)
                 {
                     TempData["Error"] = "Please fill in all required fields.";
-                    // اگر ServiceDesk است دوباره dropdown را بساز
+                    // if ServiceDesk, rebuild the dropdown
                     if (User.IsInRole(nameof(RoleType.ServiceDesk)))
                     {
                         var employees = await _employeeService.GetListAsync();
@@ -343,7 +345,7 @@ namespace NoSQL_Project.Controllers
                     return RedirectToAction(nameof(Index));
                 }
 
-                // اجازه: ServiceDesk یا گزارش‌دهنده
+                // Permission: ServiceDesk or the reporter
                 var isDesk = User.IsInRole(nameof(RoleType.ServiceDesk));
                 var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
                 if (!isDesk && ticket.ReportedBy != userId)
@@ -352,13 +354,13 @@ namespace NoSQL_Project.Controllers
                     return RedirectToAction(nameof(Index));
                 }
 
-                // فیلدهای قابل ویرایش
+                // Editable fields
                 ticket.Title = model.Title;
                 ticket.Description = model.Description;
                 ticket.Priority = Enum.Parse<TicketPriority>(model.Priority);
                 ticket.Status = Enum.Parse<TicketStatus>(model.Status);
 
-                // فقط ServiceDesk اجازه‌ی تغییر assignee دارد
+                // only ServiceDesk can change the assignee
                 if (isDesk && !string.IsNullOrEmpty(model.HandledById))
                 {
                     ticket.AssignedTo ??= model.HandledById;
@@ -512,7 +514,6 @@ namespace NoSQL_Project.Controllers
             }
         }
 
-
         // ---------- Close (POST) ----------
         [HttpPost, ActionName("Close")]
         [Authorize(Roles = nameof(RoleType.ServiceDesk))]
@@ -549,7 +550,65 @@ namespace NoSQL_Project.Controllers
             }
         }
 
+        // ---------- Search (GET) ----------
+        //Individual feature ticket search service Pariya Hallaji
 
+        [HttpGet]
+        public async Task<IActionResult> Search(string q, string? scope = null)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(q))
+                    return RedirectToAction(nameof(Index));
+
+                var isDesk = User.IsInRole(nameof(RoleType.ServiceDesk));
+                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+                // If ServiceDesk + scope==All => search all, else search only "my" scope
+                bool myScopeOnly = !(isDesk && string.Equals(scope, "All", StringComparison.OrdinalIgnoreCase));
+
+                var tickets = await _ticketSearchService.SearchAsync(q, myScopeOnly, userId, isDesk);
+
+                // Map to VM (reuse the controller helper to keep things DRY)
+                var list = new List<TicketListItemVM>();
+                foreach (var t in tickets)
+                {
+                    //  Useی the helper so logic stays consistent with Index/All
+                    var assigneeName = await ResolveAssigneeNameAsync(t);
+
+                    list.Add(new TicketListItemVM
+                    {
+                        Id = t.Id!,
+                        Title = t.Title,
+                        Status = t.Status,
+                        Priority = t.Priority,
+                        Deadline = t.Deadline,
+                        ReporterName = "(hidden)",
+                        AssigneeName = assigneeName,
+                        IsAssignedToCurrentUser =
+                            (!string.IsNullOrEmpty(t.AssignedTo) && t.AssignedTo == userId) ||
+                            (t.HandledBy?.Any(h => h.EmployeeId == userId) == true)
+                    });
+                }
+
+                var vm = new TicketListVM
+                {
+                    Items = list,
+                    IsServiceDesk = isDesk
+                };
+
+                // Preserve scope (so buttons/columns render correctly)
+                ViewBag.Scope = myScopeOnly ? "My" : "All";
+                ViewBag.Query = q; // for showing a "results for" hint and keeping input value
+                return View("Index", vm);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error searching tickets.");
+                TempData["Error"] = "Failed to search tickets.";
+                return RedirectToAction(nameof(Index));
+            }
+        }
 
         /*  [HttpGet]
           [Authorize(Roles = nameof(RoleType.ServiceDesk))]

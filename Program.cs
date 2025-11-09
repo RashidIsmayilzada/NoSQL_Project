@@ -52,6 +52,7 @@ builder.Services.AddScoped<IEmployeeService, EmployeeService>();
 builder.Services.AddScoped<ITicketRepository, TicketRepository>();
 builder.Services.AddScoped<ITicketService, TicketService>();
 builder.Services.AddScoped<IDashboardService, DashboardService>();
+builder.Services.AddScoped<ITicketSearchService, TicketSearchService>(); //individual feature ticket search service Pariya Hallaji
 
 // Enable session state  
 builder.Services.AddSession(options =>
