@@ -481,9 +481,11 @@ namespace NoSQL_Project.Controllers
         }
 
         // ---------- Delete (GET) ----------
+
+        // ---------- Close (GET) ----------
         [HttpGet]
         [Authorize(Roles = nameof(RoleType.ServiceDesk))]
-        public async Task<IActionResult> Delete(string id)
+        public async Task<IActionResult> Close(string id)
         {
             try
             {
@@ -500,28 +502,22 @@ namespace NoSQL_Project.Controllers
                     return RedirectToAction(nameof(Index));
                 }
 
-                var isDesk = User.IsInRole(nameof(RoleType.ServiceDesk));
-                var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-                if (!isDesk && t.ReportedBy != currentUserId)
-                {
-                    TempData["Error"] = "You are not allowed to delete this ticket.";
-                    return RedirectToAction(nameof(Index));
-                }
-
-                return View(t);
+                return View("Close", t);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error loading Delete for {TicketId}", id);
-                TempData["Error"] = "Cannot load delete confirmation.";
+                _logger.LogError(ex, "Error loading Close for {TicketId}", id);
+                TempData["Error"] = "Cannot load close confirmation.";
                 return RedirectToAction(nameof(Index));
             }
         }
 
-        [HttpPost, ActionName("Delete")]
+
+        // ---------- Close (POST) ----------
+        [HttpPost, ActionName("Close")]
         [Authorize(Roles = nameof(RoleType.ServiceDesk))]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed(string id)
+        public async Task<IActionResult> CloseConfirmed(string id)
         {
             try
             {
@@ -531,16 +527,90 @@ namespace NoSQL_Project.Controllers
                     return RedirectToAction(nameof(Index));
                 }
 
-                await _ticketService.DeleteTicketAsync(id);
-                TempData["Success"] = "Ticket deleted.";
+                var t = await _ticketService.GetTicketByIdAsync(id);
+                if (t == null)
+                {
+                    TempData["Error"] = "Ticket not found.";
+                    return RedirectToAction(nameof(Index));
+                }
+
+                // فقط وضعیت را "Closed" کن؛ حذف نمی‌کنیم
+                t.Status = TicketStatus.Closed;
+                await _ticketService.UpdateTicketAsync(t.Id!, t);
+
+                TempData["Success"] = "Ticket closed.";
                 return RedirectToAction(nameof(Index));
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error deleting {TicketId}", id);
-                TempData["Error"] = "Unexpected error while deleting ticket.";
+                _logger.LogError(ex, "Error closing {TicketId}", id);
+                TempData["Error"] = "Unexpected error while closing ticket.";
                 return RedirectToAction(nameof(Index));
             }
         }
+
+
+
+        /*  [HttpGet]
+          [Authorize(Roles = nameof(RoleType.ServiceDesk))]
+          public async Task<IActionResult> Delete(string id)
+          {
+              try
+              {
+                  if (string.IsNullOrWhiteSpace(id) || !ObjectId.TryParse(id, out _))
+                  {
+                      TempData["Error"] = "Invalid ticket id.";
+                      return RedirectToAction(nameof(Index));
+                  }
+
+                  var t = await _ticketService.GetTicketByIdAsync(id);
+                  if (t == null)
+                  {
+                      TempData["Error"] = "Ticket not found.";
+                      return RedirectToAction(nameof(Index));
+                  }
+
+                  var isDesk = User.IsInRole(nameof(RoleType.ServiceDesk));
+                  var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                  if (!isDesk && t.ReportedBy != currentUserId)
+                  {
+                      TempData["Error"] = "You are not allowed to delete this ticket.";
+                      return RedirectToAction(nameof(Index));
+                  }
+
+                  return View(t);
+              }
+              catch (Exception ex)
+              {
+                  _logger.LogError(ex, "Error loading Delete for {TicketId}", id);
+                  TempData["Error"] = "Cannot load delete confirmation.";
+                  return RedirectToAction(nameof(Index));
+              }
+          }
+
+        [HttpPost, ActionName("Delete")]
+          [Authorize(Roles = nameof(RoleType.ServiceDesk))]
+          [ValidateAntiForgeryToken]
+          public async Task<IActionResult> DeleteConfirmed(string id)
+          {
+              try
+              {
+                  if (string.IsNullOrWhiteSpace(id) || !ObjectId.TryParse(id, out _))
+                  {
+                      TempData["Error"] = "Invalid ticket id.";
+                      return RedirectToAction(nameof(Index));
+                  }
+
+                  await _ticketService.DeleteTicketAsync(id);
+                  TempData["Success"] = "Ticket deleted.";
+                  return RedirectToAction(nameof(Index));
+              }
+              catch (Exception ex)
+              {
+                  _logger.LogError(ex, "Error deleting {TicketId}", id);
+                  TempData["Error"] = "Unexpected error while deleting ticket.";
+                  return RedirectToAction(nameof(Index));
+              }
+          } */
     }
 }

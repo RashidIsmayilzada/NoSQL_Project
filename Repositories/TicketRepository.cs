@@ -1,4 +1,4 @@
-using MongoDB.Bson;
+﻿using MongoDB.Bson;
 using MongoDB.Driver;
 using NoSQL_Project.Models;
 using NoSQL_Project.Repositories.Interfaces;
@@ -114,7 +114,7 @@ public class TicketRepository : ITicketRepository
     }
 
 
-    // Retrieves all tickets assigned to the given user, It�s used for showing the �My Tickets� list for ServiceDesk employees
+    // Retrieves all tickets assigned to the given user, It’s used for showing the “My Tickets” list for ServiceDesk employees
     public async Task<IEnumerable<Ticket>> GetAssignedToUserAsync(string userId)
     {
         var filter = Builders<Ticket>.Filter.Eq(t => t.AssignedTo, userId);
@@ -136,31 +136,11 @@ public class TicketRepository : ITicketRepository
             .Push(t => t.HandledBy, handlingInfo);
 
         var res = await _tickets.UpdateOneAsync(filter, update);
-        return res.MatchedCount == 1 && res.ModifiedCount == 1;
+
+        // مهم: اگر سند پیدا شد، موفق حساب می‌کنیم؛ ModifiedCount ممکن است 0 باشد اگر همان مقدار قبلی بوده
+        return res.MatchedCount == 1;
     }
 
-
-
-    /* public async Task<bool> AssignTicketToEmployeeAsync(string ticketId, string employeeId)
-     {
-         var filter = Builders<Ticket>.Filter.Eq(t => t.Id, ticketId);
-         var update = Builders<Ticket>.Update.Push(t => t.HandledBy, new HandlingInfo
-         {
-             EmployeeId = employeeId,
-             Date = DateTime.Now.ToString("yyyy-MM-dd")
-         });
-
-         var result = await _tickets.UpdateOneAsync(filter, update);
-         return result.ModifiedCount == 1;
-     }*/
-    /* public async Task<bool> AssignAsync(string ticketId, string assigneeUserId)
-  {
-      var filter = Builders<Ticket>.Filter.Eq(t => t.Id, ticketId);
-      var update = Builders<Ticket>.Update.Set(t => t.AssignedTo, assigneeUserId);
-
-      var res = await _tickets.UpdateOneAsync(filter, update);
-      return res.MatchedCount == 1;
-  }*/
 
 
 }

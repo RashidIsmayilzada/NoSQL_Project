@@ -2,13 +2,14 @@
 @model TicketListVM
 
 @{
+    // Page title based on scope
     var scope = (string?)ViewBag.Scope ?? "My";
     ViewData["Title"] = scope == "All" ? "All Tickets" : "My Tickets";
     var returnToAll = string.Equals(scope, "All", StringComparison.OrdinalIgnoreCase);
 }
 
 <style>
-    /* فقط همین صفحه */
+    /* Styles scoped to this page only */
     .tickets .table thead th {
         white-space: nowrap;
     }
@@ -19,10 +20,11 @@
         white-space: nowrap;
     }
 
+    /* Enough width for buttons + dropdown */
     .tickets .td-actions {
         width: 520px;
     }
-    /* جا برای دکمه‌ها + منو */
+
     .tickets .table td, .tickets .table th {
         vertical-align: middle;
     }
@@ -34,11 +36,13 @@
 </style>
 
 <div class="container-fluid py-3 tickets">
+    <!-- Header + Create button -->
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h2 class="fw-semibold mb-0 text-primary">
             <i class="bi bi-ticket-perforated me-2"></i> @ViewData["Title"]
         </h2>
 
+        @* Regular users can still create; ServiceDesk gets a solid button *@
         @if (Model.IsServiceDesk)
         {
             <a asp-action="Create" class="btn btn-success">
@@ -64,7 +68,11 @@
                             <th>Status</th>
                             <th>Priority</th>
                             <th>Deadline</th>
-                            <th>Assignee</th>
+                            @* Show Assignee column only for ServiceDesk *@
+                            @if (Model.IsServiceDesk)
+                            {
+                                <th>Assignee</th>
+                            }
                             <th class="text-center">Actions</th>
                         </tr>
                     </thead>
@@ -76,7 +84,12 @@
                                 <td><span class="badge bg-secondary">@t.Status</span></td>
                                 <td><span class="badge bg-info text-dark">@t.Priority</span></td>
                                 <td class="td-deadline">@t.Deadline</td>
-                                <td class="td-assignee">@(string.IsNullOrWhiteSpace(t.AssigneeName) ? "-" : t.AssigneeName)</td>
+
+                                @* Assignee value only for ServiceDesk *@
+                                @if (Model.IsServiceDesk)
+                                {
+                                    <td class="td-assignee">@(string.IsNullOrWhiteSpace(t.AssigneeName) ? "-" : t.AssigneeName)</td>
+                                }
 
                                 <td class="td-actions text-center">
                                     <div class="d-inline-flex align-items-center gap-2">
@@ -87,15 +100,15 @@
                                             <i class="bi bi-pencil-square"></i> Edit
                                         </a>
 
-                                        @* Delete فقط برای ServiceDesk *@
+                                        @* Close (formerly Delete) only for ServiceDesk *@
                                         @if (Model.IsServiceDesk)
                                         {
-                                            <a class="btn btn-outline-danger btn-sm" asp-action="Delete" asp-route-id="@t.Id">
-                                                <i class="bi bi-trash"></i> Delete
+                                            <a class="btn btn-outline-warning btn-sm" asp-action="Close" asp-route-id="@t.Id">
+                                                <i class="bi bi-lock"></i> Close
                                             </a>
                                         }
 
-                                        @* دکمه Assign + منوی فشرده *@
+                                        @* Assign actions only for ServiceDesk *@
                                         @if (Model.IsServiceDesk)
                                         {
                                             <div class="btn-group">
@@ -103,7 +116,7 @@
                                                     <i class="bi bi-people"></i> Assign
                                                 </button>
                                                 <ul class="dropdown-menu dropdown-menu-end">
-                                                    @* حالت‌های مختلف *@
+                                                    @* Show current assignee, if any *@
                                                     @if (!string.IsNullOrWhiteSpace(t.AssigneeName))
                                                     {
                                                         <li>
@@ -115,6 +128,7 @@
                                                         <li><hr class="dropdown-divider" /></li>
                                                     }
 
+                                                    @* Assign to me *@
                                                     @if (!t.IsAssignedToCurrentUser)
                                                     {
                                                         <li>
@@ -140,14 +154,12 @@
                                                         </li>
                                                     }
 
+                                                    @* Assign to another employee *@
                                                     <li>
                                                         <a class="dropdown-item" asp-action="Assign" asp-route-id="@t.Id">
                                                             <i class="bi bi-person-plus"></i> Assign to someone…
                                                         </a>
                                                     </li>
-
-                                                    @* Unassign عمداً حذف شد *@
-                                                    @* <li><a class="dropdown-item text-danger" ...>Unassign</a></li> *@
                                                 </ul>
                                             </div>
                                         }
@@ -183,8 +195,12 @@
                         </div>
 
                         <div class="mt-2 d-flex flex-wrap gap-2">
-                            <span class="badge bg-info text-dark"><i class="bi bi-flag"></i> @t.Priority</span>
-                            @if (!string.IsNullOrWhiteSpace(t.AssigneeName))
+                            <span class="badge bg-info text-dark">
+                                <i class="bi bi-flag"></i> @t.Priority
+                            </span>
+
+                            @* Assignee badge only for ServiceDesk *@
+                            @if (Model.IsServiceDesk && !string.IsNullOrWhiteSpace(t.AssigneeName))
                             {
                                 <span class="badge bg-dark-subtle text-dark text-nowrap">
                                     <i class="bi bi-person-check"></i> @t.AssigneeName
@@ -200,10 +216,11 @@
                                 <i class="bi bi-pencil-square me-1"></i> Edit
                             </a>
 
+                            @* Close (formerly Delete) only for ServiceDesk *@
                             @if (Model.IsServiceDesk)
                             {
-                                <a class="btn btn-outline-danger btn-sm flex-fill" asp-action="Delete" asp-route-id="@t.Id">
-                                    <i class="bi bi-trash me-1"></i> Delete
+                                <a class="btn btn-outline-warning btn-sm flex-fill" asp-action="Close" asp-route-id="@t.Id">
+                                    <i class="bi bi-lock me-1"></i> Close
                                 </a>
 
                                 <div class="dropup flex-fill">

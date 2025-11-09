@@ -2,7 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using NoSQL_Project.Models.Enums;
 using NoSQL_Project.Services.Interfaces;
-using NoSQL_Project.ViewModels;
+using NoSQL_Project.ViewModels.Dashboard;
 using System.Security.Claims;
 
 namespace NoSQL_Project.Controllers
