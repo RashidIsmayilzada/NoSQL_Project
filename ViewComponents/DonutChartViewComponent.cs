@@ -10,9 +10,9 @@ namespace NoSQL_Project.ViewComponents
             public string Title { get; init; } = "";
             public IList<string> Labels { get; init; } = new List<string>();
             public IList<int> Data { get; init; } = new List<int>();
-            public int? Total { get; init; } // برای نمایش x/y اگر بخوای
-        }
+            public int? Total { get; init; } // "for displaying x/y if needed"
 
+        }
         public IViewComponentResult Invoke(DonutChartModel model) => View(model);
     }
 }

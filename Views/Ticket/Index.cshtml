@@ -1,16 +1,16 @@
 ﻿@using NoSQL_Project.ViewModels.Tickets
+@using NoSQL_Project.Models.Enums   @* needed for TicketStatus checks *@
 @model TicketListVM
 
 @{
     // -------- Page context & dynamic title --------
-    // Scope comes from controller: "All" (ServiceDesk) or "My" (default)
     var scope = (string?)ViewBag.Scope ?? "My";
     ViewData["Title"] = scope == "All" ? "All Tickets" : "My Tickets";
 
-    // When we navigated from All(), keep a flag to preserve redirection after "Assign to me"
+    // keep redirect target for AssignToMe
     var returnToAll = string.Equals(scope, "All", StringComparison.OrdinalIgnoreCase);
 
-    // If this view is used by the Search action, the controller sets ViewBag.Query
+    // if set by Search action
     var q = ViewBag.Query as string;
 }
 
@@ -45,7 +45,7 @@
         position: fixed;
         top: 1rem;
         right: 1rem;
-        z-index: 1080; /* above navbar/cards */
+        z-index: 1080;
         display: flex;
         flex-direction: column;
         gap: .5rem;
@@ -54,13 +54,11 @@
 
 <!-- =================== Toasts (Search hint + optional Success/Error) =================== -->
 <div class="toast-stack" aria-live="polite" aria-atomic="true">
-    @* Search result toast: shown only when ViewBag.Query is present *@
+    @* Search result toast *@
     @if (!string.IsNullOrWhiteSpace(q))
     {
-        <div id="toast-search"
-             class="toast align-items-center text-bg-light border-0"
-             role="alert" aria-live="assertive" aria-atomic="true"
-             data-bs-delay="4000">
+        <div id="toast-search" class="toast align-items-center text-bg-light border-0"
+             role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="4000">
             <div class="d-flex">
                 <div class="toast-body">
                     <i class="bi bi-search"></i>
@@ -71,13 +69,11 @@
         </div>
     }
 
-    @* Success toast surfaced from TempData (e.g., after Assign/Close) *@
+    @* Success toast (TempData["Success"]) *@
     @if (TempData["Success"] is string sMsg && !string.IsNullOrWhiteSpace(sMsg))
     {
-        <div id="toast-success"
-             class="toast align-items-center text-bg-success border-0"
-             role="alert" aria-live="assertive" aria-atomic="true"
-             data-bs-delay="3500">
+        <div id="toast-success" class="toast align-items-center text-bg-success border-0"
+             role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="3500">
             <div class="d-flex">
                 <div class="toast-body">
                     <i class="bi bi-check-circle"></i> @sMsg
@@ -88,13 +84,11 @@
         </div>
     }
 
-    @* Error toast surfaced from TempData *@
+    @* Error toast (TempData["Error"]) *@
     @if (TempData["Error"] is string eMsg && !string.IsNullOrWhiteSpace(eMsg))
     {
-        <div id="toast-error"
-             class="toast align-items-center text-bg-danger border-0"
-             role="alert" aria-live="assertive" aria-atomic="true"
-             data-bs-delay="4500">
+        <div id="toast-error" class="toast align-items-center text-bg-danger border-0"
+             role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="4500">
             <div class="d-flex">
                 <div class="toast-body">
                     <i class="bi bi-exclamation-triangle"></i> @eMsg
@@ -113,7 +107,6 @@
             <i class="bi bi-ticket-perforated me-2"></i> @ViewData["Title"]
         </h2>
 
-        @* Regular users: outline button; ServiceDesk: solid button *@
         @if (Model.IsServiceDesk)
         {
             <a asp-action="Create" class="btn btn-success">
@@ -132,19 +125,14 @@
     <div class="card border-0 shadow-sm mb-3">
         <div class="card-body">
             <form asp-action="Search" method="get" class="row g-2 align-items-center">
-                <!-- Search query with AND/OR/quotes support (parsed in TicketSearchService) -->
                 <div class="col-12 col-md-7">
                     <div class="input-group">
                         <span class="input-group-text"><i class="bi bi-search"></i></span>
-                        <input type="text"
-                               name="q"
-                               value="@(q ?? "")"
-                               class="form-control"
+                        <input type="text" name="q" value="@(q ?? "")" class="form-control"
                                placeholder='Search (AND / OR, quotes for "phrases")'>
                     </div>
                 </div>
 
-                @* Preserve scope for ServiceDesk so Search can run over "All" when needed *@
                 @if (Model.IsServiceDesk)
                 {
                     <input type="hidden" name="scope" value="@(returnToAll ? "All" : "My")" />
@@ -157,7 +145,6 @@
                 </div>
 
                 <div class="col-6 col-md-auto">
-                    @* Clear returns to Index() or All() depending on current scope *@
                     <a class="btn btn-outline-secondary w-100"
                        asp-action="@(Model.IsServiceDesk ? (returnToAll ? "All" : "Index") : "Index")">
                         <i class="bi bi-x-circle"></i> Clear
@@ -184,7 +171,6 @@
                             <th>Status</th>
                             <th>Priority</th>
                             <th>Deadline</th>
-                            @* Assignee column visible only for ServiceDesk *@
                             @if (Model.IsServiceDesk)
                             {
                                 <th>Assignee</th>
@@ -201,7 +187,6 @@
                                 <td><span class="badge bg-info text-dark">@t.Priority</span></td>
                                 <td class="td-deadline">@t.Deadline</td>
 
-                                @* Name of assignee (only meaningful for ServiceDesk) *@
                                 @if (Model.IsServiceDesk)
                                 {
                                     <td class="td-assignee">@(string.IsNullOrWhiteSpace(t.AssigneeName) ? "-" : t.AssigneeName)</td>
@@ -209,7 +194,6 @@
 
                                 <td class="td-actions text-center">
                                     <div class="d-inline-flex align-items-center gap-2">
-                                        <!-- Always available: Details / Edit -->
                                         <a class="btn btn-outline-primary btn-sm" asp-action="Details" asp-route-id="@t.Id">
                                             <i class="bi bi-info-circle"></i> Details
                                         </a>
@@ -220,21 +204,27 @@
                                         @* ServiceDesk-only actions: Close & Assign *@
                                         @if (Model.IsServiceDesk)
                                         {
-                                            <!-- Close (Soft delete): sets Status = Closed -->
-                                            <a class="btn btn-outline-warning btn-sm" asp-action="Close" asp-route-id="@t.Id">
-                                                <i class="bi bi-lock"></i> Close
-                                            </a>
+                                            @* Show Close only if NOT already closed/resolved *@
+                                            @if (t.Status != TicketStatus.Closed && t.Status != TicketStatus.Resolved)
+                                            {
+                                                <a class="btn btn-outline-warning btn-sm" asp-action="Close" asp-route-id="@t.Id" title="Close this ticket">
+                                                    <i class="bi bi-lock"></i> Close
+                                                </a>
+                                            }
+                                            else
+                                            {
+                                                <span class="btn btn-outline-secondary btn-sm disabled" title="Already closed">
+                                                    <i class="bi bi-lock-fill"></i> Closed
+                                                </span>
+                                            }
 
-                                            <!-- Assign menu: assign to me / assign to someone -->
+                                            <!-- Assign menu -->
                                             <div class="btn-group">
-                                                <button type="button"
-                                                        class="btn btn-outline-dark btn-sm dropdown-toggle"
+                                                <button type="button" class="btn btn-outline-dark btn-sm dropdown-toggle"
                                                         data-bs-toggle="dropdown" aria-expanded="false">
                                                     <i class="bi bi-people"></i> Assign
                                                 </button>
                                                 <ul class="dropdown-menu dropdown-menu-end">
-
-                                                    @* Show current assignee if exists *@
                                                     @if (!string.IsNullOrWhiteSpace(t.AssigneeName))
                                                     {
                                                         <li>
@@ -245,13 +235,10 @@
                                                         <li><hr class="dropdown-divider" /></li>
                                                     }
 
-                                                    @* Assign to me (hidden if already assigned to current user) *@
                                                     @if (!t.IsAssignedToCurrentUser)
                                                     {
                                                         <li>
-                                                            <form asp-action="AssignToMe"
-                                                                  asp-controller="Ticket"
-                                                                  method="post"
+                                                            <form asp-action="AssignToMe" asp-controller="Ticket" method="post"
                                                                   class="px-2 py-1"
                                                                   asp-route-id="@t.Id"
                                                                   asp-route-returnTo="@(returnToAll ? "All" : null)">
@@ -271,7 +258,6 @@
                                                         </li>
                                                     }
 
-                                                    @* Assign to someone else (opens selection view) *@
                                                     <li>
                                                         <a class="dropdown-item" asp-action="Assign" asp-route-id="@t.Id">
                                                             <i class="bi bi-person-plus"></i> Assign to someone…
@@ -288,7 +274,6 @@
                 </table>
             </div>
 
-            <!-- Footer: simple count; replace with paging later if needed -->
             <div class="card-footer small text-muted text-end">
                 Showing @Model.Items.Count() tickets
             </div>
@@ -317,7 +302,6 @@
                                 <i class="bi bi-flag"></i> @t.Priority
                             </span>
 
-                            @* Assignee badge for ServiceDesk only *@
                             @if (Model.IsServiceDesk && !string.IsNullOrWhiteSpace(t.AssigneeName))
                             {
                                 <span class="badge bg-dark-subtle text-dark text-nowrap">
@@ -336,13 +320,22 @@
 
                             @if (Model.IsServiceDesk)
                             {
-                                <a class="btn btn-outline-warning btn-sm flex-fill" asp-action="Close" asp-route-id="@t.Id">
-                                    <i class="bi bi-lock me-1"></i> Close
-                                </a>
+                                @* Conditional Close on mobile as well *@
+                                @if (t.Status != TicketStatus.Closed && t.Status != TicketStatus.Resolved)
+                                {
+                                    <a class="btn btn-outline-warning btn-sm flex-fill" asp-action="Close" asp-route-id="@t.Id">
+                                        <i class="bi bi-lock me-1"></i> Close
+                                    </a>
+                                }
+                                else
+                                {
+                                    <span class="btn btn-outline-secondary btn-sm flex-fill disabled">
+                                        <i class="bi bi-lock-fill me-1"></i> Closed
+                                    </span>
+                                }
 
                                 <div class="dropup flex-fill">
-                                    <button type="button"
-                                            class="btn btn-outline-dark btn-sm w-100 dropdown-toggle"
+                                    <button type="button" class="btn btn-outline-dark btn-sm w-100 dropdown-toggle"
                                             data-bs-toggle="dropdown" aria-expanded="false">
                                         <i class="bi bi-people"></i> Assign
                                     </button>
@@ -360,9 +353,7 @@
                                         @if (!t.IsAssignedToCurrentUser)
                                         {
                                             <li>
-                                                <form asp-action="AssignToMe"
-                                                      asp-controller="Ticket"
-                                                      method="post"
+                                                <form asp-action="AssignToMe" asp-controller="Ticket" method="post"
                                                       class="px-2 py-1"
                                                       asp-route-id="@t.Id"
                                                       asp-route-returnTo="@(returnToAll ? "All" : null)">
@@ -406,8 +397,7 @@
     <script>
         // =================== Bootstrap toast auto-show ===================
         document.addEventListener("DOMContentLoaded", function () {
-            const ids = ["toast-search", "toast-success", "toast-error"];
-            ids.forEach(id => {
+            ["toast-search", "toast-success", "toast-error"].forEach(id => {
                 const el = document.getElementById(id);
                 if (el) new bootstrap.Toast(el).show();
             });

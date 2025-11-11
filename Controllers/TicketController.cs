@@ -15,7 +15,7 @@ namespace NoSQL_Project.Controllers
     public class TicketController : Controller
     {
         private readonly ITicketService _ticketService;
-        private readonly ITicketSearchService _ticketSearchService; //////
+        private readonly ITicketSearchService _ticketSearchService; //individual feature ticket search service Pariya Hallaji
         private readonly IEmployeeService _employeeService;
         private readonly ILogger<TicketController> _logger;
 
@@ -255,7 +255,8 @@ namespace NoSQL_Project.Controllers
 
         // ---------- Edit (GET) ----------
         [HttpGet]
-        [Authorize] // فقط لاگین لازم است؛ نقش را داخل خود اکشن چک می‌کنیم
+        [Authorize]   // Only login is required; role is checked within the action itself.
+
         public async Task<IActionResult> Edit(string id)
         {
             try
@@ -482,8 +483,6 @@ namespace NoSQL_Project.Controllers
             }
         }
 
-        // ---------- Delete (GET) ----------
-
         // ---------- Close (GET) ----------
         [HttpGet]
         [Authorize(Roles = nameof(RoleType.ServiceDesk))]
@@ -535,7 +534,7 @@ namespace NoSQL_Project.Controllers
                     return RedirectToAction(nameof(Index));
                 }
 
-                // فقط وضعیت را "Closed" کن؛ حذف نمی‌کنیم
+                //"Just set status to 'Closed'; we don't delete."
                 t.Status = TicketStatus.Closed;
                 await _ticketService.UpdateTicketAsync(t.Id!, t);
 
