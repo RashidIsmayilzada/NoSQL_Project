@@ -28,20 +28,27 @@ namespace NoSQL_Project.Controllers
         }
 
         // ---------- Helpers ----------
-        private static string? ResolveAssigneeId(Ticket t)
-        {
-            var idFromHistory = t.HandledBy?.LastOrDefault()?.EmployeeId;
-            if (!string.IsNullOrWhiteSpace(idFromHistory)) return idFromHistory;
-            return string.IsNullOrWhiteSpace(t.AssignedTo) ? null : t.AssignedTo;
-        }
+        //private static string? ResolveAssigneeId(Ticket t)
+        //{
+        //    return string.IsNullOrWhiteSpace(t.AssignedTo) ? null : t.AssignedTo;
+        //}
 
         private async Task<string?> ResolveAssigneeNameAsync(Ticket t)
         {
-            var assigneeId = ResolveAssigneeId(t);
+            var assigneeId = t.AssignedTo;
             if (string.IsNullOrWhiteSpace(assigneeId)) return null;
 
             var emp = await _employeeService.GetDetailsAsync(assigneeId);
             return emp == null ? null : $"{emp.Name.FirstName} {emp.Name.LastName}";
+        }
+
+        private async Task<string?> ResolveReporterNameAsync(Ticket t)
+        {
+            var reporterId = t.ReportedBy;
+            if (string.IsNullOrWhiteSpace(reporterId)) return null;
+
+            var emp = await _employeeService.GetDetailsAsync(reporterId);
+            return emp == null ? null : emp.Name.ToString();
         }
 
         private static string GetDisplayName(EmployeeListViewModel e)
@@ -67,6 +74,7 @@ namespace NoSQL_Project.Controllers
                 foreach (var t in tickets)
                 {
                     var assigneeName = await ResolveAssigneeNameAsync(t);
+                    string reporterName = await ResolveReporterNameAsync(t);
                     list.Add(new TicketListItemVM
                     {
                         Id = t.Id!,
@@ -74,11 +82,10 @@ namespace NoSQL_Project.Controllers
                         Status = t.Status,
                         Priority = t.Priority,
                         Deadline = t.Deadline,
-                        ReporterName = "(hidden)",
+                        ReporterName = reporterName,
                         AssigneeName = assigneeName,
                         IsAssignedToCurrentUser =
-                            (!string.IsNullOrEmpty(t.AssignedTo) && t.AssignedTo == userId) ||
-                            (t.HandledBy?.Any(h => h.EmployeeId == userId) == true)
+                            (!string.IsNullOrEmpty(t.AssignedTo) && t.AssignedTo == userId)
                     });
                 }
 
@@ -113,6 +120,7 @@ namespace NoSQL_Project.Controllers
                 foreach (var t in tickets)
                 {
                     var assigneeName = await ResolveAssigneeNameAsync(t);
+                    string reporterName = await ResolveReporterNameAsync(t);
                     list.Add(new TicketListItemVM
                     {
                         Id = t.Id!,
@@ -120,11 +128,10 @@ namespace NoSQL_Project.Controllers
                         Status = t.Status,
                         Priority = t.Priority,
                         Deadline = t.Deadline,
-                        ReporterName = "(hidden)",
+                        ReporterName = reporterName,
                         AssigneeName = assigneeName,
                         IsAssignedToCurrentUser =
-                            (!string.IsNullOrEmpty(t.AssignedTo) && t.AssignedTo == userId) ||
-                            (t.HandledBy?.Any(h => h.EmployeeId == userId) == true)
+                            (!string.IsNullOrEmpty(t.AssignedTo) && t.AssignedTo == userId)
                     });
                 }
 
@@ -160,6 +167,7 @@ namespace NoSQL_Project.Controllers
                 }
 
                 var assigneeName = await ResolveAssigneeNameAsync(t);
+                string reporterName = await ResolveReporterNameAsync(t);
 
                 var vm = new TicketDetailsVM
                 {
@@ -170,7 +178,7 @@ namespace NoSQL_Project.Controllers
                     Deadline = t.Deadline,
                     Description = t.Description,
                     Status = t.Status,
-                    ReporterName = "(hidden)",
+                    ReporterName = reporterName,
                     AssigneeName = assigneeName ?? "-"
                 };
 
@@ -290,7 +298,7 @@ namespace NoSQL_Project.Controllers
                     Description = ticket.Description,
                     Priority = ticket.Priority.ToString(),
                     Status = ticket.Status.ToString(),
-                    HandledById = ResolveAssigneeId(ticket) // same helper above the controller
+                    HandledById = ticket.AssignedTo // same helper above the controller
                 };
 
                 // Only ServiceDesk sees the assign list
@@ -367,15 +375,6 @@ namespace NoSQL_Project.Controllers
                     ticket.AssignedTo ??= model.HandledById;
                     ticket.AssignedTo = model.HandledById;
 
-                    ticket.HandledBy ??= new List<HandlingInfo>();
-                    if (!ticket.HandledBy.Any(h => h.EmployeeId == model.HandledById))
-                    {
-                        ticket.HandledBy.Add(new HandlingInfo
-                        {
-                            EmployeeId = model.HandledById,
-                            Date = DateTime.UtcNow.ToString("yyyy-MM-dd")
-                        });
-                    }
                 }
 
                 await _ticketService.UpdateTicketAsync(ticket.Id!, ticket);
@@ -574,6 +573,7 @@ namespace NoSQL_Project.Controllers
                 {
                     //  Useی the helper so logic stays consistent with Index/All
                     var assigneeName = await ResolveAssigneeNameAsync(t);
+                    string reporterName = await ResolveReporterNameAsync(t);
 
                     list.Add(new TicketListItemVM
                     {
@@ -582,11 +582,10 @@ namespace NoSQL_Project.Controllers
                         Status = t.Status,
                         Priority = t.Priority,
                         Deadline = t.Deadline,
-                        ReporterName = "(hidden)",
+                        ReporterName = reporterName,
                         AssigneeName = assigneeName,
                         IsAssignedToCurrentUser =
-                            (!string.IsNullOrEmpty(t.AssignedTo) && t.AssignedTo == userId) ||
-                            (t.HandledBy?.Any(h => h.EmployeeId == userId) == true)
+                            (!string.IsNullOrEmpty(t.AssignedTo) && t.AssignedTo == userId)
                     });
                 }
 

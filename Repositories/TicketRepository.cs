@@ -125,15 +125,8 @@ public class TicketRepository : ITicketRepository
     {
         var filter = Builders<Ticket>.Filter.Eq(t => t.Id, ticketId);
 
-        var handlingInfo = new HandlingInfo
-        {
-            EmployeeId = assigneeUserId,
-            Date = DateTime.UtcNow.ToString("yyyy-MM-dd")
-        };
-
         var update = Builders<Ticket>.Update
-            .Set(t => t.AssignedTo, assigneeUserId)
-            .Push(t => t.HandledBy, handlingInfo);
+            .Set(t => t.AssignedTo, assigneeUserId);
 
         var res = await _tickets.UpdateOneAsync(filter, update);
 

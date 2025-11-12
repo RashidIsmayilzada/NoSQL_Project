@@ -38,10 +38,8 @@ namespace NoSQL_Project.Services
                 {
                     // My tickets (ServiceDesk): assigned to me OR handled by me (history)
                     var assignedToMe = Builders<Ticket>.Filter.Eq(t => t.AssignedTo, userId);
-                    var handledByMe = Builders<Ticket>.Filter.ElemMatch(t => t.HandledBy,
-                        Builders<HandlingInfo>.Filter.Eq(h => h.EmployeeId, userId));
 
-                    scopeFilter = Builders<Ticket>.Filter.Or(assignedToMe, handledByMe);
+                    scopeFilter = Builders<Ticket>.Filter.Or(assignedToMe);
                 }
                 else
                 {
