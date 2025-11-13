@@ -9,11 +9,12 @@
   );
     public class DashboardVM
     {
-        // چارت ۱: درصد وضعیت تیکت‌ها 
+       
+        //Chart 1: Ticket Status Percentage
         public DonutDataset StatusBreakdown { get; set; } =
             new(new List<string>(), new List<int>(), 0);
         public bool IsServiceDesk { get; set; }
-        // چارت ۲: open vs overdue
+        // Chart2: open vs overdue
         public int TotalTickets { get; set; }
         public int OpenTickets { get; set; }
         public int OverdueOpen { get; set; }

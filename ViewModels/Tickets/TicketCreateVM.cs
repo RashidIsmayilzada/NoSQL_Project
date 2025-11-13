@@ -15,17 +15,17 @@ public class TicketCreateVM
     [Required]
     public TicketPriority Priority { get; set; }
 
-    // فعلاً string چون مدل دیتابیس هم string دارد
+    // Currently string because the database model also has string
     [Required]
     public string Deadline { get; set; } = "";
 
     [Required, StringLength(2000)]
     public string Description { get; set; } = "";
 
-    // فقط برای ServiceDesk: انتخاب گزارش‌دهنده
+    
+    //Only for ServiceDesk: select reporter
     public string? ReportedBy { get; set; }
 
-    // Dropdown کاربران (فقط Id و نام)
+    // Dropdown users (only Id and Name)
     public IEnumerable<SelectListItem> ReporterOptions { get; set; } = Enumerable.Empty<SelectListItem>();
 }
-// فقط برای ServiceDesk نمایش داده می‌شود:

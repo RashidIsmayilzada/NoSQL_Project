@@ -3,7 +3,8 @@
     public class TicketListVM
     {
         public IEnumerable<TicketListItemVM> Items { get; set; } = Enumerable.Empty<TicketListItemVM>();
-        public bool IsServiceDesk { get; set; } // برای نمایش دکمه‌های اضافی
+        public bool IsServiceDesk { get; set; } 
+        //for showing extra buttons
 
     }
 }

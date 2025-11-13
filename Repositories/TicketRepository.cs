@@ -130,7 +130,6 @@ public class TicketRepository : ITicketRepository
 
         var res = await _tickets.UpdateOneAsync(filter, update);
 
-        // مهم: اگر سند پیدا شد، موفق حساب می‌کنیم؛ ModifiedCount ممکن است 0 باشد اگر همان مقدار قبلی بوده
         return res.MatchedCount == 1;
     }
 

@@ -8,9 +8,9 @@ public class TicketListItemVM
     public string Title { get; set; } = "";
     public TicketStatus Status { get; set; }
     public TicketPriority Priority { get; set; }
-    public string Deadline { get; set; } = "";  // یا DateTime? اگر مدل را تغییر دادی
-    public string ReporterName { get; set; } = "";   // فقط نام ترکیبی
-    public string? AssigneeName { get; set; }        // اگر assign شد
+    public string Deadline { get; set; } = ""; 
+    public string ReporterName { get; set; } = ""; 
+    public string? AssigneeName { get; set; }        
 
     public bool IsAssignedToCurrentUser { get; set; }
 
