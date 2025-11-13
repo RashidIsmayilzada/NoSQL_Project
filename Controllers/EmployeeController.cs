@@ -11,10 +11,11 @@ using NoSQL_Project.ViewModels.Employee;
 namespace NoSQL_Project.Controllers
 {
     [Authorize(Roles = "ServiceDesk")]
-    public class EmployeeController(IEmployeeService employeeService, ILogger<EmployeeController> logger)
+    public class EmployeeController(IEmployeeService employeeService, ITicketService ticketService, ILogger<EmployeeController> logger)
         : Controller
     {
         private readonly IEmployeeService _employeeService = employeeService;
+        private readonly ITicketService _ticketService = ticketService;
         private readonly ILogger<EmployeeController> _logger = logger;
 
         // GET: /Employee
@@ -284,6 +285,13 @@ namespace NoSQL_Project.Controllers
                 {
                     _logger.LogWarning("Invalid employee ID format: {EmployeeId}", id);
                     TempData["Error"] = "Invalid employee ID format.";
+                    return RedirectToAction(nameof(Index));
+                }
+
+                if(_ticketService.GetForUserAsync(id).Result.Any() || _ticketService.GetAssignedToUserAsync(id).Result.Any())
+                {
+                    _logger.LogWarning("Attempt to delete employee with associated tickets: {EmployeeId}", id);
+                    TempData["Error"] = "Cannot delete employee with associated tickets. You can disabled the account instead by editing it.";
                     return RedirectToAction(nameof(Index));
                 }
 
