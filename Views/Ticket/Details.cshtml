@@ -13,9 +13,11 @@
             <a class="btn btn-outline-secondary" asp-action="Edit" asp-route-id="@Model.Id">
                 <i class="bi bi-pencil-square"></i> Edit
             </a>
-            <a class="btn btn-light" asp-action="Index">
+            <button type="button"
+                    class="btn btn-light"
+                    onclick="history.back()">
                 <i class="bi bi-arrow-left"></i> Back
-            </a>
+            </button>
         </div>
     </div>
 

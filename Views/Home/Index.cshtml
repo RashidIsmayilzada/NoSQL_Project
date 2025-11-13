@@ -1,8 +1,36 @@
 ﻿@{
-    ViewData["Title"] = "Home Page";
+    ViewData["Title"] = "Home";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<div class="container-fluid py-4 home">
+
+    <div class="d-flex flex-column align-items-center text-center">
+
+        <!-- Centered Image -->
+        <img src="~/Landing-Image.png"
+             alt="Incident Management Illustration"
+             class="img-fluid mb-4"
+             style="max-width: 520px; max-height: 50vh">
+
+        <!-- Title -->
+        <h1 class="fw-semibold text-primary mb-2">
+            Welcome to The Garden Group
+        </h1>
+
+        <h5 class="text-muted mb-4">
+            Incident Management System
+        </h5>
+
+        <!-- Description -->
+        <p class="text-secondary mb-4" style="max-width: 520px;">
+            Quickly report technical issues, equipment failures, and workplace incidents.
+            Our service desk will review and respond as soon as possible.
+        </p>
+
+        <a asp-controller="Ticket" asp-action="Create"
+           class="btn btn-success btn-lg px-4 py-2 rounded-3 shadow-sm">
+            <i class="bi bi-plus-circle me-2"></i> Report New Incident
+        </a>
+
+    </div>
 </div>
