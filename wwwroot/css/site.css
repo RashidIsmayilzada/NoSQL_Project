@@ -66,3 +66,8 @@ main {
         overflow: auto;
     }
 }
+
+.login-background {
+    background: url('https://images.pexels.com/photos/434634/pexels-photo-434634.jpeg') center no-repeat fixed;
+    background-size: cover;
+}

@@ -17,7 +17,7 @@ namespace NoSQL_Project.Services
         }
 
         // -------------------------------
-        // READ: Get all employees
+        // READ: Get all employees with ticket counts
         // -------------------------------
         public async Task<IReadOnlyList<EmployeeListViewModel>> GetListAsync()
         {
@@ -36,6 +36,23 @@ namespace NoSQL_Project.Services
 
         // -------------------------------
         // READ: Single employee by ID
+        // -------------------------------
+        public async Task<EmployeeViewModel?> GetEmployeeAsync(string id)
+        {
+            var employee = await _employeeRepository.GetEmployeeById(id);
+            if (employee == null) return null;
+
+            return new EmployeeViewModel
+            {
+                Id = employee.Id ?? "",
+                IsDisabled = employee.IsDisabled,
+                Name = employee.Name,
+                Role = employee.Role,
+            };
+        }
+
+        // -------------------------------
+        // READ: Single employee with tickets by ID
         // -------------------------------
         public async Task<EmployeeDetailsViewModel?> GetDetailsAsync(string id)
         {
@@ -78,6 +95,7 @@ namespace NoSQL_Project.Services
         {
             var employee = await _employeeRepository.GetEmployeeByEmail(vm.Email);
             if (employee == null) return null;
+            if (employee.IsDisabled) return null;
 
             if (!PasswordHelper.VerifyPassword(vm.Password, employee.PasswordHashed))
                 return null;
@@ -151,6 +169,11 @@ namespace NoSQL_Project.Services
         // -------------------------------
         public async Task<bool> DeleteAsync(string id)
         {
+
+            //------------------------------------------------------------------------------------!!!!!!
+            //TO DO - Check if employee has any tickets related to them and block deletion if so!!!!!!!!
+            //------------------------------------------------------------------------------------!!!!!!
+
             await _employeeRepository.DeleteEmployee(id);
             return true;
         }
