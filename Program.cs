@@ -1,4 +1,7 @@
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.UI.Services;
 using MongoDB.Driver;
+using NoSQL_Project.Models;
 using NoSQL_Project.Repositories;
 using NoSQL_Project.Repositories.Interfaces;
 using NoSQL_Project.Services;
@@ -47,11 +50,16 @@ builder.Services.AddAuthentication("MyCookie")
         options.SlidingExpiration = true;
     });
 
+
 builder.Services.AddScoped<IEmployeeRepository, EmployeeRepository>();
 builder.Services.AddScoped<IEmployeeService, EmployeeService>();
 builder.Services.AddScoped<ITicketRepository, TicketRepository>();
 builder.Services.AddScoped<ITicketService, TicketService>();
 builder.Services.AddScoped<IDashboardService, DashboardService>();
+builder.Services.AddScoped<ITicketSearchService, TicketSearchService>(); //individual feature ticket search service Pariya Hallaji
+builder.Services.AddScoped<IEmailSenderService, EmailSenderService>(); //individual feature for forgotten password email sending Paulius Silkartas
+builder.Services.AddScoped<IPasswordResetTokenService, PasswordResetTokenService>(); // individual feature for forgotten password Paulius Silkartas
+
 
 // Enable session state  
 builder.Services.AddSession(options =>
@@ -80,6 +88,7 @@ app.UseRouting();
 app.UseStaticFiles();
 app.UseSession();
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapStaticAssets();

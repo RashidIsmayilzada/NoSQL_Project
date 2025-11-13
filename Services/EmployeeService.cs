@@ -10,14 +10,16 @@ namespace NoSQL_Project.Services
     public class EmployeeService : IEmployeeService
     {
         private readonly IEmployeeRepository _employeeRepository;
+        private readonly ITicketRepository _ticketRepository;
 
-        public EmployeeService(IEmployeeRepository employeeRepository)
+        public EmployeeService(IEmployeeRepository employeeRepository, ITicketRepository ticketRepository)
         {
             _employeeRepository = employeeRepository;
+            _ticketRepository = ticketRepository;
         }
 
         // -------------------------------
-        // READ: Get all employees
+        // READ: Get all employees with ticket counts
         // -------------------------------
         public async Task<IReadOnlyList<EmployeeListViewModel>> GetListAsync()
         {
@@ -36,6 +38,23 @@ namespace NoSQL_Project.Services
 
         // -------------------------------
         // READ: Single employee by ID
+        // -------------------------------
+        public async Task<EmployeeViewModel?> GetEmployeeAsync(string id)
+        {
+            var employee = await _employeeRepository.GetEmployeeById(id);
+            if (employee == null) return null;
+
+            return new EmployeeViewModel
+            {
+                Id = employee.Id ?? "",
+                IsDisabled = employee.IsDisabled,
+                Name = employee.Name,
+                Role = employee.Role,
+            };
+        }
+
+        // -------------------------------
+        // READ: Single employee with tickets by ID
         // -------------------------------
         public async Task<EmployeeDetailsViewModel?> GetDetailsAsync(string id)
         {
@@ -78,6 +97,7 @@ namespace NoSQL_Project.Services
         {
             var employee = await _employeeRepository.GetEmployeeByEmail(vm.Email);
             if (employee == null) return null;
+            if (employee.IsDisabled) return null;
 
             if (!PasswordHelper.VerifyPassword(vm.Password, employee.PasswordHashed))
                 return null;
@@ -151,9 +171,26 @@ namespace NoSQL_Project.Services
         // -------------------------------
         public async Task<bool> DeleteAsync(string id)
         {
-            await _employeeRepository.DeleteEmployee(id);
+            if (_ticketRepository.GetAssignedToUserAsync(id).Result.Any() || _ticketRepository.GetByReporterIdAsync(id).Result.Any())
+            {
+                return false; // Cannot delete employee with associated tickets
+            }
+                await _employeeRepository.DeleteEmployee(id);
             return true;
         }
 
+        public async Task<EmployeeViewModel?> GetEmployeeByEmailAsync(string email)
+        {
+            var employee = await _employeeRepository.GetEmployeeByEmail(email);
+            if (employee == null) return null;
+            if (employee.IsDisabled) return null;
+            return new EmployeeViewModel
+            {
+                Id = employee.Id ?? "",
+                IsDisabled = employee.IsDisabled,
+                Name = employee.Name,
+                Role = employee.Role,
+            };
+        }
     }
 }

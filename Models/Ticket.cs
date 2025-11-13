@@ -34,20 +34,7 @@ namespace NoSQL_Project.Models
         [BsonRepresentation(BsonType.ObjectId)]
         public string? ReportedBy { get; set; }
 
-        [BsonElement("HandeledBy")]
-        public List<HandlingInfo> HandledBy { get; set; } = new();
-    }
-
-    public class HandlingInfo
-    {
-        [BsonElement("employeeID")]
-        [BsonRepresentation(BsonType.ObjectId)]
-        public string? EmployeeId { get; set; }
-
-        [BsonElement("date")]
-        public string Date { get; set; } = "";
-
-        [BsonIgnore]
-        public Employee Employee { get; set; } = new();
+        [BsonRepresentation(BsonType.String)]
+        public string? AssignedTo { get; set; }
     }
 }

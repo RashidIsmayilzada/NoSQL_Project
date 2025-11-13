@@ -1,11 +1,9 @@
-﻿using MongoDB.Bson;
-using MongoDB.Bson.Serialization.Attributes;
-using NoSQL_Project.Models;        
-using NoSQL_Project.Models.Enums;
+﻿using NoSQL_Project.Models.Enums;
+using NoSQL_Project.Models;
 
 namespace NoSQL_Project.ViewModels.Employee
 {
-    public class EmployeeDetailsViewModel
+    public class EmployeeViewModel
     {
         public string Id { get; set; } = "";
         public bool IsDisabled { get; set; } = false;

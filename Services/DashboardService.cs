@@ -1,9 +1,9 @@
 ﻿using MongoDB.Driver;
 using NoSQL_Project.Models;
 using NoSQL_Project.Models.Enums;
-using NoSQL_Project.ViewModels;
 
 using NoSQL_Project.Services.Interfaces;
+using NoSQL_Project.ViewModels.Dashboard;
 
 namespace NoSQL_Project.Services
 {

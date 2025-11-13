@@ -19,7 +19,8 @@
         </div>
     </div>
 
-    <div class="card shadow-sm border-0 rounded-4 overflow-hidden">
+    <!-- Employee information -->
+    <div class="card shadow-sm border-0 rounded-4 overflow-hidden mb-4">
         <div class="card-header bg-light d-flex justify-content-between align-items-center">
             <div class="fw-semibold d-flex align-items-center gap-2">
                 @Model?.Name?.FirstName @Model?.Name?.LastName
@@ -40,26 +41,11 @@
             <div class="table-responsive">
                 <table class="table align-middle mb-0 text-break">
                     <tbody>
-                        <tr>
-                            <th class="w-25 text-muted">First Name</th>
-                            <td>@Model?.Name?.FirstName</td>
-                        </tr>
-                        <tr>
-                            <th class="text-muted">Last Name</th>
-                            <td>@Model?.Name?.LastName</td>
-                        </tr>
-                        <tr>
-                            <th class="text-muted">Email</th>
-                            <td>@Model?.ContactInfo?.Email</td>
-                        </tr>
-                        <tr>
-                            <th class="text-muted">Phone</th>
-                            <td>@Model?.ContactInfo?.Phone</td>
-                        </tr>
-                        <tr>
-                            <th class="text-muted">Location</th>
-                            <td>@Model?.ContactInfo?.Location</td>
-                        </tr>
+                        <tr><th class="w-25 text-muted">First Name</th><td>@Model?.Name?.FirstName</td></tr>
+                        <tr><th class="text-muted">Last Name</th><td>@Model?.Name?.LastName</td></tr>
+                        <tr><th class="text-muted">Email</th><td>@Model?.ContactInfo?.Email</td></tr>
+                        <tr><th class="text-muted">Phone</th><td>@Model?.ContactInfo?.Phone</td></tr>
+                        <tr><th class="text-muted">Location</th><td>@Model?.ContactInfo?.Location</td></tr>
                         <tr>
                             <th class="text-muted">Role</th>
                             <td>
@@ -91,5 +77,54 @@
                 </table>
             </div>
         </div>
+    </div>
+
+    <!-- Reported Tickets list -->
+    <div class="card shadow-sm border-0 rounded-4">
+        <div class="card-header bg-primary bg-opacity-10 fw-semibold">
+            <i class="bi bi-ticket-perforated me-2 text-primary"></i>
+            Reported Tickets
+        </div>
+
+        @if (Model.ReportedTickets == null || !Model.ReportedTickets.Any())
+        {
+            <div class="card-body text-center text-muted py-4">
+                No tickets have been reported by this employee.
+            </div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th scope="col">Title</th>
+                            <th scope="col">Type</th>
+                            <th scope="col">Priority</th>
+                            <th scope="col">Status</th>
+                            <th scope="col">Deadline</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var ticket in Model.ReportedTickets)
+                        {
+                            <tr>
+                                <td>@ticket.Title</td>
+                                <td>@ticket.Type</td>
+                                <td>
+                                    <span class="badge bg-primary">
+                                        @ticket.Priority
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-secondary">@ticket.Status</span>
+                                </td>
+                                <td>@ticket.Deadline</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
     </div>
 </div>

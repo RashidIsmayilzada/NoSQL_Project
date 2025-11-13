@@ -1,4 +1,4 @@
-﻿namespace NoSQL_Project.ViewModels
+﻿namespace NoSQL_Project.ViewModels.Dashboard
 {
 
 

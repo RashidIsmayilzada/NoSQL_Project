@@ -11,10 +11,11 @@ using NoSQL_Project.ViewModels.Employee;
 namespace NoSQL_Project.Controllers
 {
     [Authorize(Roles = "ServiceDesk")]
-    public class EmployeeController(IEmployeeService employeeService, ILogger<EmployeeController> logger)
+    public class EmployeeController(IEmployeeService employeeService, ITicketService ticketService, ILogger<EmployeeController> logger)
         : Controller
     {
         private readonly IEmployeeService _employeeService = employeeService;
+        private readonly ITicketService _ticketService = ticketService;
         private readonly ILogger<EmployeeController> _logger = logger;
 
         // GET: /Employee
@@ -266,6 +267,119 @@ namespace NoSQL_Project.Controllers
             }
         }
 
+        // GET: /Employee/ChangePassword/{id}
+        [HttpGet]
+        public async Task<IActionResult> ChangePassword(string id)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(id))
+                {
+                    _logger.LogWarning("Edit called with null or empty ID");
+                    TempData["Error"] = "Employee ID is required.";
+                    return RedirectToAction(nameof(Index));
+                }
+
+                // Validate ObjectId format
+                if (!ObjectId.TryParse(id, out _))
+                {
+                    _logger.LogWarning("Invalid employee ID format: {EmployeeId}", id);
+                    TempData["Error"] = "Invalid employee ID format.";
+                    return RedirectToAction(nameof(Index));
+                }
+
+                _logger.LogInformation("Loading employee for edit: {EmployeeId}", id);
+                EmployeeViewModel? employee = await _employeeService.GetEmployeeAsync(id);
+
+                if (employee == null)
+                {
+                    _logger.LogWarning("Employee not found for edit with ID: {EmployeeId}", id);
+                    TempData["Error"] = $"Employee with ID {id} not found.";
+                    return RedirectToAction(nameof(Index));
+                }
+
+                PasswordChangeViewModel vm = new PasswordChangeViewModel
+                {
+                    Id = employee.Id,
+                    Name = employee.Name
+                };
+                return View(vm);
+            }
+            catch (MongoException ex)
+            {
+                _logger.LogError(ex, "Database error while loading employee for edit {EmployeeId}", id);
+                TempData["Error"] = "Unable to load employee. Please try again later.";
+                return RedirectToAction(nameof(Index));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Unexpected error while loading employee for edit {EmployeeId}", id);
+                TempData["Error"] = "An unexpected error occurred.";
+                return RedirectToAction(nameof(Index));
+            }
+        }
+
+        // POST: /Employee/ChangePassword
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ChangePassword(PasswordChangeViewModel vm)
+        {
+            try
+            {
+                if (vm == null)
+                {
+                    _logger.LogWarning("Edit POST called with null employee");
+                    TempData["Error"] = "Employee data is required.";
+                    return RedirectToAction(nameof(Index));
+                }
+
+                if (string.IsNullOrEmpty(vm.Id))
+                {
+                    _logger.LogWarning("Edit POST called with null or empty employee ID");
+                    ModelState.AddModelError("", "Employee ID is required.");
+                    return View(vm);
+                }
+
+                // Validate ObjectId format
+                if (!ObjectId.TryParse(vm.Id, out _))
+                {
+                    _logger.LogWarning("Invalid employee ID format in edit: {EmployeeId}", vm.Id);
+                    ModelState.AddModelError("", "Invalid employee ID format.");
+                    return View(vm);
+                }
+
+                if (!ModelState.IsValid)
+                {
+                    _logger.LogWarning("Invalid model state for employee edit: {EmployeeId}", vm.Id);
+                    return View(vm);
+                }
+
+                _logger.LogInformation("Updating password for employee: {EmployeeId}", vm.Id);
+                bool result = await _employeeService.ChangePasswordAsync(vm);
+                if (!result)
+                {
+                    _logger.LogWarning("Failed to update password for employee: {EmployeeId}", vm.Id);
+                    ModelState.AddModelError("", "Entered passwords do not match, try again.");
+                    return View(vm);
+                }
+
+                TempData["Success"] = "Employee password updated successfully!";
+                return RedirectToAction(nameof(Index));
+            }
+            catch (MongoException ex)
+            {
+                _logger.LogError(ex, "Database error while updating employee {EmployeeId}", vm?.Id);
+                ModelState.AddModelError("", "Unable to update employee password. Please try again later.");
+                return View(vm);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Unexpected error while updating password for employee {EmployeeId}", vm?.Id);
+                ModelState.AddModelError("", "An unexpected error occurred.");
+                return View(vm);
+            }
+        }
+
         // GET: /Employee/Delete/{id}
         [HttpGet]
         public async Task<IActionResult> Delete(string id)
@@ -341,7 +455,7 @@ namespace NoSQL_Project.Controllers
                 if (!result)
                 {
                     _logger.LogWarning("Failed to delete employee: {EmployeeId}", id);
-                    TempData["Error"] = "Failed to delete employee. Please try again.";
+                    TempData["Error"] = "Cannot delete employee with associated tickets, you can disable the account by editing it.";
                     return RedirectToAction(nameof(Index));
                 }
 

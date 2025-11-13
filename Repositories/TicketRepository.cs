@@ -1,4 +1,4 @@
-using MongoDB.Bson;
+﻿using MongoDB.Bson;
 using MongoDB.Driver;
 using NoSQL_Project.Models;
 using NoSQL_Project.Repositories.Interfaces;
@@ -107,4 +107,33 @@ public class TicketRepository : ITicketRepository
     {
         await _tickets.DeleteOneAsync(t => t.Id == id);
     }
+    public async Task<IEnumerable<Ticket>> GetByReporterIdAsync(string userId)
+    {
+        var filter = Builders<Ticket>.Filter.Eq(t => t.ReportedBy, userId);
+        return await _tickets.Find(filter).ToListAsync();
+    }
+
+
+    // Retrieves all tickets assigned to the given user, It’s used for showing the “My Tickets” list for ServiceDesk employees
+    public async Task<IEnumerable<Ticket>> GetAssignedToUserAsync(string userId)
+    {
+        var filter = Builders<Ticket>.Filter.Eq(t => t.AssignedTo, userId);
+        return await _tickets.Find(filter).ToListAsync();
+    }
+
+    public async Task<bool> AssignAsync(string ticketId, string assigneeUserId)
+    {
+        var filter = Builders<Ticket>.Filter.Eq(t => t.Id, ticketId);
+
+        var update = Builders<Ticket>.Update
+            .Set(t => t.AssignedTo, assigneeUserId);
+
+        var res = await _tickets.UpdateOneAsync(filter, update);
+
+        // مهم: اگر سند پیدا شد، موفق حساب می‌کنیم؛ ModifiedCount ممکن است 0 باشد اگر همان مقدار قبلی بوده
+        return res.MatchedCount == 1;
+    }
+
+
+
 }
