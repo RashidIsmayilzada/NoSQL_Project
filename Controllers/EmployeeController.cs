@@ -401,13 +401,6 @@ namespace NoSQL_Project.Controllers
                     return RedirectToAction(nameof(Index));
                 }
 
-                if(_ticketService.GetForUserAsync(id).Result.Any() || _ticketService.GetAssignedToUserAsync(id).Result.Any())
-                {
-                    _logger.LogWarning("Attempt to delete employee with associated tickets: {EmployeeId}", id);
-                    TempData["Error"] = "Cannot delete employee with associated tickets. You can disabled the account instead by editing it.";
-                    return RedirectToAction(nameof(Index));
-                }
-
                 _logger.LogInformation("Loading employee for delete confirmation: {EmployeeId}", id);
                 EmployeeDetailsViewModel? employee = await _employeeService.GetDetailsAsync(id);
 
@@ -462,7 +455,7 @@ namespace NoSQL_Project.Controllers
                 if (!result)
                 {
                     _logger.LogWarning("Failed to delete employee: {EmployeeId}", id);
-                    TempData["Error"] = "Failed to delete employee. Please try again.";
+                    TempData["Error"] = "Cannot delete employee with associated tickets, you can disable the account by editing it.";
                     return RedirectToAction(nameof(Index));
                 }
 

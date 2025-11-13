@@ -10,10 +10,12 @@ namespace NoSQL_Project.Services
     public class EmployeeService : IEmployeeService
     {
         private readonly IEmployeeRepository _employeeRepository;
+        private readonly ITicketRepository _ticketRepository;
 
-        public EmployeeService(IEmployeeRepository employeeRepository)
+        public EmployeeService(IEmployeeRepository employeeRepository, ITicketRepository ticketRepository)
         {
             _employeeRepository = employeeRepository;
+            _ticketRepository = ticketRepository;
         }
 
         // -------------------------------
@@ -169,14 +171,26 @@ namespace NoSQL_Project.Services
         // -------------------------------
         public async Task<bool> DeleteAsync(string id)
         {
-
-            //------------------------------------------------------------------------------------!!!!!!
-            //TO DO - Check if employee has any tickets related to them and block deletion if so!!!!!!!!
-            //------------------------------------------------------------------------------------!!!!!!
-
-            await _employeeRepository.DeleteEmployee(id);
+            if (_ticketRepository.GetAssignedToUserAsync(id).Result.Any() || _ticketRepository.GetByReporterIdAsync(id).Result.Any())
+            {
+                return false; // Cannot delete employee with associated tickets
+            }
+                await _employeeRepository.DeleteEmployee(id);
             return true;
         }
 
+        public async Task<EmployeeViewModel?> GetEmployeeByEmailAsync(string email)
+        {
+            var employee = await _employeeRepository.GetEmployeeByEmail(email);
+            if (employee == null) return null;
+            if (employee.IsDisabled) return null;
+            return new EmployeeViewModel
+            {
+                Id = employee.Id ?? "",
+                IsDisabled = employee.IsDisabled,
+                Name = employee.Name,
+                Role = employee.Role,
+            };
+        }
     }
 }

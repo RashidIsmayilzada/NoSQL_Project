@@ -6,13 +6,10 @@
 
 <form asp-action="Assign" asp-controller="Ticket" method="post" class="vstack gap-3">
     @Html.AntiForgeryToken()
-
-    <!-- حتما یکی از این دو راه id را به اکشن برساند -->
     <input type="hidden" name="id" value="@ViewBag.TicketId" />
 
     <div>
         <label for="assigneeId" class="form-label">Select Employee</label>
-        <!-- بسیار مهم: name و id دقیقا assigneeId باشد -->
         <select id="assigneeId" name="assigneeId" class="form-select" asp-items="ViewBag.Employees">
             <option value="">-- Select --</option>
         </select>

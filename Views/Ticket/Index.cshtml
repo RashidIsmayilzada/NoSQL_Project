@@ -1,406 +1,356 @@
 ﻿@using NoSQL_Project.ViewModels.Tickets
-@using NoSQL_Project.Models.Enums   @* needed for TicketStatus checks *@
+@using NoSQL_Project.Models.Enums
 @model TicketListVM
 
 @{
-    // -------- Page context & dynamic title --------
-    var scope = (string?)ViewBag.Scope ?? "My";
-    ViewData["Title"] = scope == "All" ? "All Tickets" : "My Tickets";
+	var scope = (string?)ViewBag.Scope ?? "My";
+	ViewData["Title"] = scope == "All" ? "All Tickets" : "My Tickets";
 
-    // keep redirect target for AssignToMe
-    var returnToAll = string.Equals(scope, "All", StringComparison.OrdinalIgnoreCase);
-
-    // if set by Search action
-    var q = ViewBag.Query as string;
+	var returnToAll = string.Equals(scope, "All", StringComparison.OrdinalIgnoreCase);
+	var q = ViewBag.Query as string;
 }
 
 <style>
-    /* ============= Page-scoped styles (do NOT move to site.css unless reused) ============= */
-    .tickets .table thead th {
-        white-space: nowrap;
-    }
+	/* Very light, responsive-safe styling */
+	.tickets table th,
+	.tickets table td {
+		white-space: nowrap;
+	}
 
-    .tickets .td-deadline,
-    .tickets .td-assignee,
-    .tickets .td-actions {
-        white-space: nowrap;
-    }
-
-    /* Enough width for: Details, Edit, Close, Assign dropdown */
-    .tickets .td-actions {
-        width: 520px;
-    }
-
-    .tickets .table td, .tickets .table th {
-        vertical-align: middle;
-    }
-
-    .dropdown-item.disabled, .dropdown-item:disabled {
-        color: #6c757d;
-        pointer-events: none;
-    }
-
-    /* Toast stack: lightweight notification area (search hint + TempData toasts) */
-    .toast-stack {
-        position: fixed;
-        top: 1rem;
-        right: 1rem;
-        z-index: 1080;
-        display: flex;
-        flex-direction: column;
-        gap: .5rem;
-    }
+	/* Allow the actions to wrap cleanly instead of forcing width */
+	.tickets .action-buttons {
+		display: flex;
+		flex-wrap: wrap;
+		gap: .5rem;
+		justify-content: center;
+	}
 </style>
 
-<!-- =================== Toasts (Search hint + optional Success/Error) =================== -->
-<div class="toast-stack" aria-live="polite" aria-atomic="true">
-    @* Search result toast *@
-    @if (!string.IsNullOrWhiteSpace(q))
-    {
-        <div id="toast-search" class="toast align-items-center text-bg-light border-0"
-             role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="4000">
-            <div class="d-flex">
-                <div class="toast-body">
-                    <i class="bi bi-search"></i>
-                    Results for: <strong>@q</strong>
-                </div>
-                <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
-            </div>
-        </div>
-    }
-
-    @* Success toast (TempData["Success"]) *@
-    @if (TempData["Success"] is string sMsg && !string.IsNullOrWhiteSpace(sMsg))
-    {
-        <div id="toast-success" class="toast align-items-center text-bg-success border-0"
-             role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="3500">
-            <div class="d-flex">
-                <div class="toast-body">
-                    <i class="bi bi-check-circle"></i> @sMsg
-                </div>
-                <button type="button" class="btn-close btn-close-white me-2 m-auto"
-                        data-bs-dismiss="toast" aria-label="Close"></button>
-            </div>
-        </div>
-    }
-
-    @* Error toast (TempData["Error"]) *@
-    @if (TempData["Error"] is string eMsg && !string.IsNullOrWhiteSpace(eMsg))
-    {
-        <div id="toast-error" class="toast align-items-center text-bg-danger border-0"
-             role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="4500">
-            <div class="d-flex">
-                <div class="toast-body">
-                    <i class="bi bi-exclamation-triangle"></i> @eMsg
-                </div>
-                <button type="button" class="btn-close btn-close-white me-2 m-auto"
-                        data-bs-dismiss="toast" aria-label="Close"></button>
-            </div>
-        </div>
-    }
-</div>
-
 <div class="container-fluid py-3 tickets">
-    <!-- =================== Header & Create button =================== -->
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h2 class="fw-semibold mb-0 text-primary">
-            <i class="bi bi-ticket-perforated me-2"></i> @ViewData["Title"]
-        </h2>
 
-        @if (Model.IsServiceDesk)
-        {
-            <a asp-action="Create" class="btn btn-success">
-                <i class="bi bi-plus-lg me-1"></i> Create New
-            </a>
-        }
-        else
-        {
-            <a asp-action="Create" class="btn btn-outline-success">
-                <i class="bi bi-plus-lg me-1"></i> New Ticket
-            </a>
-        }
-    </div>
+	<!-- Header -->
+	<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 mb-3">
+		<h2 class="fw-semibold mb-0 text-primary">
+			<i class="bi bi-ticket-perforated me-2"></i> @ViewData["Title"]
+		</h2>
 
-    <!-- =================== Search bar (GET /Ticket/Search) =================== -->
-    <div class="card border-0 shadow-sm mb-3">
-        <div class="card-body">
-            <form asp-action="Search" method="get" class="row g-2 align-items-center">
-                <div class="col-12 col-md-7">
-                    <div class="input-group">
-                        <span class="input-group-text"><i class="bi bi-search"></i></span>
-                        <input type="text" name="q" value="@(q ?? "")" class="form-control"
-                               placeholder='Search (AND / OR, quotes for "phrases")'>
-                    </div>
-                </div>
+		@if (Model.IsServiceDesk)
+		{
+			<a asp-action="Create" class="btn btn-success">
+				<i class="bi bi-plus-lg me-1"></i> Create New
+			</a>
+		}
+		else
+		{
+			<a asp-action="Create" class="btn btn-outline-success">
+				<i class="bi bi-plus-lg me-1"></i> New Ticket
+			</a>
+		}
+	</div>
 
-                @if (Model.IsServiceDesk)
-                {
-                    <input type="hidden" name="scope" value="@(returnToAll ? "All" : "My")" />
-                }
+	<!-- Search Card -->
+	<div class="card border-0 shadow-sm mb-3">
+		<div class="card-body">
+			<form asp-action="Search" method="get" class="row g-2 align-items-center">
 
-                <div class="col-6 col-md-auto">
-                    <button type="submit" class="btn btn-primary w-100">
-                        <i class="bi bi-search"></i> Search
-                    </button>
-                </div>
+				<div class="col-12 col-md-7">
+					<div class="input-group">
+						<span class="input-group-text"><i class="bi bi-search"></i></span>
+						<input type="text" name="q" value="@(q ?? "")" class="form-control"
+							   placeholder='Search (AND / OR, "phrases")'>
+					</div>
+				</div>
 
-                <div class="col-6 col-md-auto">
-                    <a class="btn btn-outline-secondary w-100"
-                       asp-action="@(Model.IsServiceDesk ? (returnToAll ? "All" : "Index") : "Index")">
-                        <i class="bi bi-x-circle"></i> Clear
-                    </a>
-                </div>
+				@if (Model.IsServiceDesk)
+				{
+					<input type="hidden" name="scope" value="@(returnToAll ? "All" : "My")" />
+				}
 
-                <div class="col-12">
-                    <small class="text-muted">
-                        Tips: <code>network AND outage</code>, <code>printer OR scanner</code>, <code>"reset password"</code>
-                    </small>
-                </div>
-            </form>
-        </div>
-    </div>
+				<div class="col-6 col-md-auto d-grid">
+					<button type="submit" class="btn btn-primary">
+						<i class="bi bi-search"></i> Search
+					</button>
+				</div>
 
-    <!-- =================== Desktop / Tablet table =================== -->
-    <div class="d-none d-md-block">
-        <div class="card shadow-sm border-0 rounded-4 overflow-hidden">
-            <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0 text-break">
-                    <thead class="table-primary">
-                        <tr>
-                            <th>Title</th>
-                            <th>Status</th>
-                            <th>Priority</th>
-                            <th>Deadline</th>
-                            @if (Model.IsServiceDesk)
-                            {
-                                <th>Assignee</th>
-                            }
-                            <th class="text-center">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var t in Model.Items)
-                        {
-                            <tr>
-                                <td>@t.Title</td>
-                                <td><span class="badge bg-secondary">@t.Status</span></td>
-                                <td><span class="badge bg-info text-dark">@t.Priority</span></td>
-                                <td class="td-deadline">@t.Deadline</td>
+				<div class="col-6 col-md-auto d-grid">
+					<a class="btn btn-outline-secondary"
+					   asp-action="@(Model.IsServiceDesk ? (returnToAll ? "All" : "Index") : "Index")">
+						<i class="bi bi-x-circle"></i> Clear
+					</a>
+				</div>
 
-                                @if (Model.IsServiceDesk)
-                                {
-                                    <td class="td-assignee">@(string.IsNullOrWhiteSpace(t.AssigneeName) ? "-" : t.AssigneeName)</td>
-                                }
+				<div class="col-12">
+					<small class="text-muted">
+						Tips: <code>network AND outage</code>, <code>printer OR scanner</code>, <code>"reset password"</code>
+					</small>
+				</div>
+			</form>
+		</div>
+	</div>
 
-                                <td class="td-actions text-center">
-                                    <div class="d-inline-flex align-items-center gap-2">
-                                        <a class="btn btn-outline-primary btn-sm" asp-action="Details" asp-route-id="@t.Id">
-                                            <i class="bi bi-info-circle"></i> Details
-                                        </a>
-                                        <a class="btn btn-outline-secondary btn-sm" asp-action="Edit" asp-route-id="@t.Id">
-                                            <i class="bi bi-pencil-square"></i> Edit
-                                        </a>
+	<!-- Desktop Table -->
+	<div class="d-none d-md-block">
+		<div class="card shadow-sm border-0 rounded-4 overflow-hidden">
+			<div class="table-responsive">
+				<table class="table table-hover align-middle mb-0 text-break">
+					<thead class="table-primary">
+						<tr>
+							<th>Title</th>
+							<th>Status</th>
+							<th>Priority</th>
+							<th>Deadline</th>
 
-                                        @* ServiceDesk-only actions: Close & Assign *@
-                                        @if (Model.IsServiceDesk)
-                                        {
-                                            @* Show Close only if NOT already closed/resolved *@
-                                            @if (t.Status != TicketStatus.Closed)
-                                            {
-                                                <a class="btn btn-outline-warning btn-sm" asp-action="Close" asp-route-id="@t.Id" title="Close this ticket">
-                                                    <i class="bi bi-lock"></i> Close
-                                                </a>
-                                            }
-                                            else
-                                            {
-                                                <span class="btn btn-outline-secondary btn-sm disabled" title="Already closed">
-                                                    <i class="bi bi-lock-fill"></i> Closed
-                                                </span>
-                                            }
+							@if (Model.IsServiceDesk)
+							{
+								<th>Assignee</th>
+							}
 
-                                            <!-- Assign menu -->
-                                            <div class="btn-group">
-                                                <button type="button" class="btn btn-outline-dark btn-sm dropdown-toggle"
-                                                        data-bs-toggle="dropdown" aria-expanded="false">
-                                                    <i class="bi bi-people"></i> Assign
-                                                </button>
-                                                <ul class="dropdown-menu dropdown-menu-end">
-                                                    @if (!string.IsNullOrWhiteSpace(t.AssigneeName))
-                                                    {
-                                                        <li>
-                                                            <span class="dropdown-item disabled">
-                                                                <i class="bi bi-person-check"></i> Current: @t.AssigneeName
-                                                            </span>
-                                                        </li>
-                                                        <li><hr class="dropdown-divider" /></li>
-                                                    }
+							<th class="text-center">Actions</th>
+						</tr>
+					</thead>
 
-                                                    @if (!t.IsAssignedToCurrentUser)
-                                                    {
-                                                        <li>
-                                                            <form asp-action="AssignToMe" asp-controller="Ticket" method="post"
-                                                                  class="px-2 py-1"
-                                                                  asp-route-id="@t.Id"
-                                                                  asp-route-returnTo="@(returnToAll ? "All" : null)">
-                                                                @Html.AntiForgeryToken()
-                                                                <button type="submit" class="dropdown-item">
-                                                                    <i class="bi bi-person-check"></i> Assign to me
-                                                                </button>
-                                                            </form>
-                                                        </li>
-                                                    }
-                                                    else
-                                                    {
-                                                        <li>
-                                                            <span class="dropdown-item disabled">
-                                                                <i class="bi bi-check-circle"></i> Assigned to you
-                                                            </span>
-                                                        </li>
-                                                    }
+					<tbody>
+						@foreach (var t in Model.Items)
+						{
+							<tr>
+								<td>@t.Title</td>
+								<td>
+									<span class="badge @(
+										t.Status switch{
+														TicketStatus.Open        => "bg-primary",
+														TicketStatus.InProgress  => "bg-info text-dark",
+														TicketStatus.OnHold      => "bg-warning text-dark",
+														TicketStatus.Resolved    => "bg-success",
+														TicketStatus.Closed      => "bg-dark",
+														_ => "bg-secondary"
+														}
+														)">
+										@t.Status
+									</span>
+								</td>
+								<td>
+									<span class="badge @(
+									t.Priority switch{
+													TicketPriority.Critical => "bg-danger",
+													TicketPriority.High     => "bg-warning text-dark",
+													TicketPriority.Medium   => "bg-info text-dark",
+													TicketPriority.Low      => "bg-secondary",
+													_ => "bg-secondary"
+													}
+														)">
+										@t.Priority
+									</span>
+								</td>
+								<td>@t.Deadline</td>
 
-                                                    <li>
-                                                        <a class="dropdown-item" asp-action="Assign" asp-route-id="@t.Id">
-                                                            <i class="bi bi-person-plus"></i> Assign to someone…
-                                                        </a>
-                                                    </li>
-                                                </ul>
-                                            </div>
-                                        }
-                                    </div>
-                                </td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            </div>
+								@if (Model.IsServiceDesk)
+								{
+									<td>@(string.IsNullOrWhiteSpace(t.AssigneeName) ? "-" : t.AssigneeName)</td>
+								}
 
-            <div class="card-footer small text-muted text-end">
-                Showing @Model.Items.Count() tickets
-            </div>
-        </div>
-    </div>
+								<td>
+									<div class="action-buttons">
 
-    <!-- =================== Mobile cards (compact layout) =================== -->
-    <div class="d-md-none mt-3">
-        <div class="vstack gap-3">
-            @foreach (var t in Model.Items)
-            {
-                <div class="card shadow-sm border-0 rounded-4">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-start">
-                            <div>
-                                <div class="fw-semibold">@t.Title</div>
-                                <div class="small text-muted text-nowrap">
-                                    <i class="bi bi-calendar"></i> @t.Deadline
-                                </div>
-                            </div>
-                            <span class="badge bg-secondary">@t.Status</span>
-                        </div>
+										<a class="btn btn-outline-primary btn-sm" asp-action="Details" asp-route-id="@t.Id">
+											<i class="bi bi-info-circle"></i> Details
+										</a>
 
-                        <div class="mt-2 d-flex flex-wrap gap-2">
-                            <span class="badge bg-info text-dark">
-                                <i class="bi bi-flag"></i> @t.Priority
-                            </span>
+										<a class="btn btn-outline-secondary btn-sm" asp-action="Edit" asp-route-id="@t.Id">
+											<i class="bi bi-pencil-square"></i> Edit
+										</a>
 
-                            @if (Model.IsServiceDesk && !string.IsNullOrWhiteSpace(t.AssigneeName))
-                            {
-                                <span class="badge bg-dark-subtle text-dark text-nowrap">
-                                    <i class="bi bi-person-check"></i> @t.AssigneeName
-                                </span>
-                            }
-                        </div>
+										@if (Model.IsServiceDesk)
+										{
+											@if (t.Status != TicketStatus.Closed)
+											{
+												<a class="btn btn-outline-warning btn-sm" asp-action="Close" asp-route-id="@t.Id">
+													<i class="bi bi-lock"></i> Close
+												</a>
+											}
+											else
+											{
+												<span class="btn btn-outline-secondary btn-sm disabled">
+													<i class="bi bi-lock-fill"></i> Closed
+												</span>
+											}
 
-                        <div class="d-flex flex-wrap gap-2 mt-3 align-items-center">
-                            <a class="btn btn-outline-primary btn-sm flex-fill" asp-action="Details" asp-route-id="@t.Id">
-                                <i class="bi bi-info-circle me-1"></i> Details
-                            </a>
-                            <a class="btn btn-outline-secondary btn-sm flex-fill" asp-action="Edit" asp-route-id="@t.Id">
-                                <i class="bi bi-pencil-square me-1"></i> Edit
-                            </a>
+											<!-- Assign dropdown -->
+											<div class="btn-group">
+												<button class="btn btn-outline-dark btn-sm dropdown-toggle"
+														data-bs-toggle="dropdown">
+													<i class="bi bi-people"></i> Assign
+												</button>
+												<ul class="dropdown-menu dropdown-menu-end">
 
-                            @if (Model.IsServiceDesk)
-                            {
-                                @* Conditional Close on mobile as well *@
-                                @if (t.Status != TicketStatus.Closed && t.Status != TicketStatus.Resolved)
-                                {
-                                    <a class="btn btn-outline-warning btn-sm flex-fill" asp-action="Close" asp-route-id="@t.Id">
-                                        <i class="bi bi-lock me-1"></i> Close
-                                    </a>
-                                }
-                                else
-                                {
-                                    <span class="btn btn-outline-secondary btn-sm flex-fill disabled">
-                                        <i class="bi bi-lock-fill me-1"></i> Closed
-                                    </span>
-                                }
+													@if (!string.IsNullOrWhiteSpace(t.AssigneeName))
+													{
+														<li>
+															<span class="dropdown-item disabled">
+																<i class="bi bi-person-check"></i> Current: @t.AssigneeName
+															</span>
+														</li>
+														<li><hr class="dropdown-divider" /></li>
+													}
 
-                                <div class="dropup flex-fill">
-                                    <button type="button" class="btn btn-outline-dark btn-sm w-100 dropdown-toggle"
-                                            data-bs-toggle="dropdown" aria-expanded="false">
-                                        <i class="bi bi-people"></i> Assign
-                                    </button>
-                                    <ul class="dropdown-menu dropdown-menu-end">
-                                        @if (!string.IsNullOrWhiteSpace(t.AssigneeName))
-                                        {
-                                            <li>
-                                                <span class="dropdown-item disabled">
-                                                    <i class="bi bi-person-check"></i> Current: @t.AssigneeName
-                                                </span>
-                                            </li>
-                                            <li><hr class="dropdown-divider" /></li>
-                                        }
+													@if (!t.IsAssignedToCurrentUser)
+													{
+														<li>
+															<form asp-action="AssignToMe" asp-controller="Ticket" method="post"
+																  class="px-2 py-1"
+																  asp-route-id="@t.Id"
+																  asp-route-returnTo="@(returnToAll ? "All" : null)">
+																@Html.AntiForgeryToken()
+																<button class="dropdown-item">
+																	<i class="bi bi-person-check"></i> Assign to me
+																</button>
+															</form>
+														</li>
+													}
+													else
+													{
+														<li>
+															<span class="dropdown-item disabled">
+																<i class="bi bi-check-circle"></i> Assigned to you
+															</span>
+														</li>
+													}
 
-                                        @if (!t.IsAssignedToCurrentUser)
-                                        {
-                                            <li>
-                                                <form asp-action="AssignToMe" asp-controller="Ticket" method="post"
-                                                      class="px-2 py-1"
-                                                      asp-route-id="@t.Id"
-                                                      asp-route-returnTo="@(returnToAll ? "All" : null)">
-                                                    @Html.AntiForgeryToken()
-                                                    <button type="submit" class="dropdown-item">
-                                                        <i class="bi bi-person-check"></i> Assign to me
-                                                    </button>
-                                                </form>
-                                            </li>
-                                        }
-                                        else
-                                        {
-                                            <li>
-                                                <span class="dropdown-item disabled">
-                                                    <i class="bi bi-check-circle"></i> Assigned to you
-                                                </span>
-                                            </li>
-                                        }
+													<li>
+														<a class="dropdown-item" asp-action="Assign" asp-route-id="@t.Id">
+															<i class="bi bi-person-plus"></i> Assign to someone…
+														</a>
+													</li>
 
-                                        <li>
-                                            <a class="dropdown-item" asp-action="Assign" asp-route-id="@t.Id">
-                                                <i class="bi bi-person-plus"></i> Assign to someone…
-                                            </a>
-                                        </li>
-                                    </ul>
-                                </div>
-                            }
-                        </div>
-                    </div>
-                </div>
-            }
-        </div>
+												</ul>
+											</div>
+										}
+									</div>
+								</td>
+							</tr>
+						}
+					</tbody>
+				</table>
+			</div>
 
-        <div class="text-end small text-muted mt-3">
-            Showing @Model.Items.Count() tickets
-        </div>
-    </div>
+			<div class="card-footer small text-muted text-end">
+				Showing @Model.Items.Count() tickets
+			</div>
+		</div>
+	</div>
+
+	<!-- Mobile Cards -->
+	<div class="d-md-none mt-3">
+		<div class="vstack gap-3">
+			@foreach (var t in Model.Items)
+			{
+				<div class="card shadow-sm border-0 rounded-4">
+					<div class="card-body">
+
+						<div class="d-flex justify-content-between">
+							<div>
+								<div class="fw-semibold">@t.Title</div>
+								<div class="small text-muted"><i class="bi bi-calendar"></i> @t.Deadline</div>
+							</div>
+							<span class="badge bg-secondary">@t.Status</span>
+						</div>
+
+						<div class="mt-2 d-flex flex-wrap gap-2">
+							<span class="badge bg-info text-dark">@t.Priority</span>
+
+							@if (Model.IsServiceDesk && !string.IsNullOrWhiteSpace(t.AssigneeName))
+							{
+								<span class="badge bg-dark-subtle text-dark">
+									<i class="bi bi-person-check"></i> @t.AssigneeName
+								</span>
+							}
+						</div>
+
+						<div class="d-flex flex-wrap gap-2 mt-3">
+
+							<a class="btn btn-outline-primary btn-sm flex-fill" asp-action="Details" asp-route-id="@t.Id">
+								<i class="bi bi-info-circle"></i> Details
+							</a>
+
+							<a class="btn btn-outline-secondary btn-sm flex-fill" asp-action="Edit" asp-route-id="@t.Id">
+								<i class="bi bi-pencil-square"></i> Edit
+							</a>
+
+							@if (Model.IsServiceDesk)
+							{
+								@if (t.Status != TicketStatus.Closed)
+								{
+									<a class="btn btn-outline-warning btn-sm flex-fill"
+									   asp-action="Close" asp-route-id="@t.Id">
+										<i class="bi bi-lock"></i> Close
+									</a>
+								}
+								else
+								{
+									<span class="btn btn-outline-secondary btn-sm flex-fill disabled">
+										<i class="bi bi-lock-fill"></i> Closed
+									</span>
+								}
+
+								<!-- Dropup for mobile -->
+								<div class="dropup flex-fill">
+									<button class="btn btn-outline-dark btn-sm w-100 dropdown-toggle"
+											data-bs-toggle="dropdown">
+										<i class="bi bi-people"></i> Assign
+									</button>
+
+									<ul class="dropdown-menu dropdown-menu-end">
+
+										@if (!string.IsNullOrWhiteSpace(t.AssigneeName))
+										{
+											<li>
+												<span class="dropdown-item disabled">
+													<i class="bi bi-person-check"></i> Current: @t.AssigneeName
+												</span>
+											</li>
+											<li><hr class="dropdown-divider" /></li>
+										}
+
+										@if (!t.IsAssignedToCurrentUser)
+										{
+											<li>
+												<form asp-action="AssignToMe" asp-controller="Ticket" method="post"
+													  class="px-2 py-1"
+													  asp-route-id="@t.Id"
+													  asp-route-returnTo="@(returnToAll ? "All" : null)">
+													@Html.AntiForgeryToken()
+													<button class="dropdown-item">
+														<i class="bi bi-person-check"></i> Assign to me
+													</button>
+												</form>
+											</li>
+										}
+										else
+										{
+											<li>
+												<span class="dropdown-item disabled">
+													<i class="bi bi-check-circle"></i> Assigned to you
+												</span>
+											</li>
+										}
+
+										<li>
+											<a class="dropdown-item" asp-action="Assign" asp-route-id="@t.Id">
+												<i class="bi bi-person-plus"></i> Assign to someone…
+											</a>
+										</li>
+
+									</ul>
+								</div>
+							}
+						</div>
+					</div>
+				</div>
+			}
+		</div>
+
+		<div class="text-end small text-muted mt-3">
+			Showing @Model.Items.Count() tickets
+		</div>
+	</div>
+
 </div>
-
-@section Scripts {
-    <script>
-        // =================== Bootstrap toast auto-show ===================
-        document.addEventListener("DOMContentLoaded", function () {
-            ["toast-search", "toast-success", "toast-error"].forEach(id => {
-                const el = document.getElementById(id);
-                if (el) new bootstrap.Toast(el).show();
-            });
-        });
-    </script>
-}

@@ -8,6 +8,7 @@ namespace NoSQL_Project.Services.Interfaces
         Task<IReadOnlyList<EmployeeListViewModel>> GetListAsync();                 // for Index
 
         Task<EmployeeViewModel?> GetEmployeeAsync(string id);                 // for basic info
+        Task<EmployeeViewModel?> GetEmployeeByEmailAsync(string email);                 // for basic info
         Task<EmployeeDetailsViewModel?> GetDetailsAsync(string id);                // for Details/Edit
         Task<IReadOnlyList<EmployeeDetailsViewModel>> GetWithTicketsAsync();       // optional page: employees + their tickets
 
