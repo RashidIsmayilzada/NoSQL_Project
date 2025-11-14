@@ -1,0 +1,119 @@
+﻿@using NoSQL_Project.ViewModels.Employee
+@model IEnumerable<EmployeeListViewModel>
+@{
+    ViewData["Title"] = "Employees";
+}
+
+<div class="container-fluid py-3">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="fw-semibold mb-0 text-primary">
+            <i class="bi bi-people-fill me-2"></i> Employees
+        </h2>
+        <a asp-action="Create" class="btn btn-success">
+            <i class="bi bi-plus-lg me-1"></i> Create New
+        </a>
+    </div>
+
+    <!-- Mobile: stacked cards -->
+    <div class="d-md-none">
+        <div class="vstack gap-3">
+            @foreach (var item in Model)
+            {
+                <div class="card shadow-sm border-0 rounded-4">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <div class="fw-semibold">@item.Name?.FirstName @item.Name?.LastName</div>
+                                <div class="text-muted small">@item.Email</div>
+                            </div>
+                            <span class="badge @(item.Role.ToString()=="ServiceDesk" ? "bg-primary" : "bg-secondary")">
+                                @item.Role
+                            </span>
+                        </div>
+
+                        <div class="mt-2">
+                            <span class="badge bg-info text-dark">
+                                <i class="bi bi-ticket-perforated me-1"></i>@(item.ReportedTicketCount) tickets
+                            </span>
+                        </div>
+
+                        <div class="d-flex gap-2 mt-3">
+                            <a class="btn btn-outline-warning btn-sm flex-fill"
+                               asp-action="Edit" asp-route-id="@item.Id">
+                                <i class="bi bi-pencil-square me-1"></i>Edit
+                            </a>
+                            <a class="btn btn-outline-danger btn-sm flex-fill"
+                               asp-action="Delete" asp-route-id="@item.Id">
+                                <i class="bi bi-trash me-1"></i>Delete
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <div class="text-end small text-muted mt-3">
+            Showing @Model.Count() employees
+        </div>
+    </div>
+
+    <!-- Tablet/Desktop: table -->
+    <div class="d-none d-md-block">
+        <div class="card shadow-sm border-0 rounded-4 overflow-hidden">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0 rounded-4 overflow-hidden text-break">
+                    <thead class="table-primary">
+                        <tr>
+                            <th scope="col" style="min-width:180px;">Email</th>
+                            <th scope="col">First Name</th>
+                            <th scope="col">Last Name</th>
+                            <th scope="col">Role</th>
+                            <th scope="col" class="text-center"># Tickets</th>
+                            <th scope="col" class="text-center">Actions</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                    <tbody>
+                            @foreach (var item in Model)
+                            {
+                            <tr class="@(item.IsDisabled ? "table-danger" : "")">
+                                <td>@item.Email</td>
+                                <td>@item.Name?.FirstName</td>
+                                <td>@item.Name?.LastName</td>
+                                <td>
+                                    <span class="badge @(item.Role.ToString()=="ServiceDesk" ? "bg-primary" : "bg-secondary")">
+                                            @item.Role
+                                    </span>
+                                </td>
+                                <td class="text-center">
+                                    <span class="badge bg-info text-dark">@(item.ReportedTicketCount)</span>
+                                </td>
+                                <td class="text-center">
+                                    <div class="btn-group" role="group">
+                                        <a class="btn btn-outline-primary btn-sm"
+                                           asp-action="Details" asp-route-id="@item.Id">
+                                            <i class="bi bi-trash"></i> Details
+                                        </a>
+                                        <a class="btn btn-outline-warning btn-sm ms-1"
+                                           asp-action="Edit" asp-route-id="@item.Id">
+                                            <i class="bi bi-pencil-square"></i> Edit
+                                        </a>
+                                        <a class="btn btn-outline-danger btn-sm ms-1"
+                                           asp-action="Delete" asp-route-id="@item.Id">
+                                            <i class="bi bi-trash"></i> Delete
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            }
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="card-footer small text-muted text-end">
+                Showing @Model.Count() employees
+            </div>
+        </div>
+    </div>
+</div>

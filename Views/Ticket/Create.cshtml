@@ -1,0 +1,68 @@
+﻿@using NoSQL_Project.ViewModels.Tickets
+@using NoSQL_Project.Models.Enums
+@model TicketCreateVM
+@{
+    ViewData["Title"] = "Create Ticket";
+    var isDesk = User.IsInRole(nameof(RoleType.ServiceDesk));
+}
+
+<div class="container py-3">
+    <h2 class="fw-semibold text-primary mb-3"><i class="bi bi-plus-circle me-2"></i>Create Ticket</h2>
+
+    <div class="card border-0 rounded-4 shadow-sm">
+        <div class="card-body">
+            <form asp-action="Create" method="post" class="row g-3">
+                @Html.AntiForgeryToken()
+                @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+
+                <div class="col-md-6">
+                    <label asp-for="Title" class="form-label">Title</label>
+                    <input asp-for="Title" class="form-control" />
+                    <span asp-validation-for="Title" class="text-danger"></span>
+                </div>
+
+                <div class="col-md-3">
+                    <label asp-for="Type" class="form-label">Type</label>
+                    <select asp-for="Type" class="form-select" asp-items="Html.GetEnumSelectList<TicketType>()"></select>
+                </div>
+
+                <div class="col-md-3">
+                    <label asp-for="Priority" class="form-label">Priority</label>
+                    <select asp-for="Priority" class="form-select" asp-items="Html.GetEnumSelectList<TicketPriority>()"></select>
+                </div>
+
+                <div class="col-md-4">
+                    <label asp-for="Deadline" class="form-label">Deadline</label>
+                    <input asp-for="Deadline" type="date" class="form-control" />
+                    <span asp-validation-for="Deadline" class="text-danger"></span>
+                </div>
+
+                @if (isDesk)
+                {
+                    <div class="col-md-4">
+                        <label asp-for="ReportedBy" class="form-label">Reporter</label>
+                        <select asp-for="ReportedBy" class="form-select" asp-items="Model.ReporterOptions">
+                            <option value="">-- select reporter --</option>
+                        </select>
+                        <span asp-validation-for="ReportedBy" class="text-danger"></span>
+                    </div>
+                }
+
+                <div class="col-12">
+                    <label asp-for="Description" class="form-label">Description</label>
+                    <textarea asp-for="Description" class="form-control" rows="4"></textarea>
+                    <span asp-validation-for="Description" class="text-danger"></span>
+                </div>
+
+                <div class="col-12 d-flex gap-2">
+                    <button type="submit" class="btn btn-primary"><i class="bi bi-check2-circle me-1"></i>Create</button>
+                    <button type="button"
+                                     class="btn btn-outline-secondary"
+                                     onclick="history.back()">
+                        Cancel
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

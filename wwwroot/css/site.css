@@ -1,31 +1,94 @@
 html {
-  font-size: 14px;
+    font-size: 14px;
 }
 
 @media (min-width: 768px) {
-  html {
-    font-size: 16px;
-  }
+    html {
+        font-size: 16px;
+    }
 }
 
 .btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
-  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
+    box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
 }
 
 html {
-  position: relative;
-  min-height: 100%;
+    position: relative;
+    min-height: 100%;
 }
 
 body {
-  margin-bottom: 60px;
+    margin: 0;
+    display: block;
+    height: auto;
+    overflow-y: auto;
+}
+
+main {
+    max-width: 100%;
+    max-height: none;
+    overflow: visible;
+    box-sizing: border-box;
 }
 
 .form-floating > .form-control-plaintext::placeholder, .form-floating > .form-control::placeholder {
-  color: var(--bs-secondary-color);
-  text-align: end;
+    color: var(--bs-secondary-color);
+    text-align: end;
 }
 
 .form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
-  text-align: start;
+    text-align: start;
+}
+
+/*Desktop and Tablet*/
+@media (min-width: 768px) {
+    body {
+        display: flex;
+        flex-wrap: nowrap;
+        height: 100vh;
+        overflow: hidden;
+    }
+
+    .sidebar {
+        width: 280px;
+        flex: 0 0 280px;
+        position: sticky;
+        top: .5rem;
+        align-self: flex-start;
+        max-height: calc(100vh - 1rem);
+        overflow: auto;
+    }
+
+    main {
+        flex: 1 1 auto;
+        max-width: 100%;
+        max-height: 100%;
+        overflow: auto;
+    }
+}
+
+.login-background {
+    background: url('/Login-Image.png') center no-repeat fixed;
+    background-size: cover;
+}
+
+.alert-container {
+    pointer-events: none; /* allow clicks through except on alerts */
+}
+    .alert-container .alert {
+        pointer-events: auto; /* alerts still clickable */
+        border-radius: 12px;
+        animation: slideDown 0.35s ease-out;
+    }
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }

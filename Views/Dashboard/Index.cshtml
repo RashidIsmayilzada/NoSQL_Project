@@ -1,0 +1,112 @@
+﻿@model NoSQL_Project.ViewModels.Dashboard.DashboardVM
+@using System
+
+@{
+    ViewData["Title"] = "Dashboard";
+}
+
+<div class="container-fluid py-3 dashboard">
+    <!-- Page header -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="fw-semibold mb-0 text-primary">
+            <i class="bi bi-speedometer2 me-2"></i> Dashboard
+        </h2>
+        <div class="d-flex gap-2">
+            <a asp-action="Index" class="btn btn-outline-primary">
+                <i class="bi bi-arrow-clockwise me-1"></i> Refresh
+            </a>
+        </div>
+    </div>
+
+    <!-- Quick stats card -->
+    <div class="card shadow-sm border-0 rounded-4 mb-3">
+        <div class="card-body d-flex flex-wrap gap-2 align-items-center">
+            <span class="badge bg-info text-dark">
+                <i class="bi bi-collection me-1"></i> Total tickets: @Model.StatusBreakdown?.Total
+            </span>
+            <span class="badge bg-warning text-dark">
+                <i class="bi bi-exclamation-triangle me-1"></i> Overdue open: @Model.OverdueOpen
+            </span>
+            <span class="badge bg-success">
+                <i class="bi bi-check2-circle me-1"></i> OK open: @Math.Max(0, Model.OpenTickets - Model.OverdueOpen)
+            </span>
+            <span class="badge bg-secondary">
+                <i class="bi bi-ui-checks-grid me-1"></i> Open total: @Model.OpenTickets
+            </span>
+        </div>
+        <div class="card-footer small text-muted text-end">
+            Last updated @DateTime.Now.ToString("dd MMM yyyy HH:mm")
+        </div>
+    </div>
+
+    <!-- Charts area -->
+    <div class="row g-3">
+        <!-- Left: always visible -->
+        <div class="@(Model.IsServiceDesk ? "col-12 col-lg-6" : "col-12")">
+            <div class="card shadow-sm border-0 rounded-4 h-100">
+                <div class="card-header bg-primary bg-opacity-10 border-0">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="fw-semibold">
+                            <i class="bi bi-pie-chart me-2"></i> Tickets by Status
+                        </div>
+                        <span class="badge bg-info text-dark">Total: @Model.StatusBreakdown?.Total</span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    @await Component.InvokeAsync(
+                             "DonutChart",
+                             new NoSQL_Project.ViewComponents.DonutChartViewComponent.DonutChartModel
+                    {
+                        Title = "Tickets by Status",
+                        Labels = Model.StatusBreakdown.Labels,
+                        Data = Model.StatusBreakdown.Data,
+                        Total = Model.StatusBreakdown.Total
+                    }
+                             )
+                </div>
+            </div>
+        </div>
+
+        <!-- Right: only for Service Desk -->
+        @if (Model.IsServiceDesk)
+        {
+            <div class="col-12 col-lg-6">
+                <div class="card shadow-sm border-0 rounded-4 h-100">
+                    <div class="card-header bg-primary bg-opacity-10 border-0">
+                        <div class="fw-semibold">
+                            <i class="bi bi-clock-history me-2"></i> Overdue vs OK (Open only)
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        @await Component.InvokeAsync(
+                                 "DonutChart",
+                                 new NoSQL_Project.ViewComponents.DonutChartViewComponent.DonutChartModel
+                    {
+                        Title = "Overdue vs OK (Open only)",
+                        Labels = new[] { "Overdue", "OK" },
+                        Data = new[] { Model.OverdueOpen, Math.Max(0, Model.OpenTickets - Model.OverdueOpen) },
+                        Total = Model.OpenTickets
+                    }
+                                 )
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+<style>
+    /* Page-scoped tweaks to mirror Employees index look without leaking globally */
+    .dashboard .card-header {
+        border-bottom-left-radius: 0;
+        border-bottom-right-radius: 0;
+    }
+
+    .dashboard .card {
+        overflow: hidden;
+    }
+
+    .dashboard .badge {
+        font-weight: 600;
+    }
+</style>

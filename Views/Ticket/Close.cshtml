@@ -1,0 +1,42 @@
+﻿@model NoSQL_Project.Models.Ticket
+@{
+    ViewData["Title"] = "Close Ticket";
+}
+
+<div class="container py-3">
+    <h2 class="fw-semibold text-warning mb-3">
+        <i class="bi bi-lock me-2"></i>Close Ticket
+    </h2>
+
+    <div class="card border-0 rounded-4 shadow-sm">
+        <div class="card-body">
+            <div class="alert alert-warning">
+                Are you sure you want to close this ticket? You can re-open it later by editing the status.
+            </div>
+
+            <dl class="row mb-0">
+                <dt class="col-sm-3">Title</dt>
+                <dd class="col-sm-9">@Model.Title</dd>
+
+                <dt class="col-sm-3">Current Status</dt>
+                <dd class="col-sm-9">@Model.Status</dd>
+
+                <dt class="col-sm-3">Priority</dt>
+                <dd class="col-sm-9">@Model.Priority</dd>
+            </dl>
+
+            <form asp-action="Close" method="post" class="mt-3">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="id" value="@Model.Id" />
+                <button type="submit" class="btn btn-warning">
+                    <i class="bi bi-check2-circle me-1"></i> Yes, close
+                </button>
+                <button type="button"
+                        class="btn btn-outline-secondary"
+                        onclick="history.back()">
+                    Cancel
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
