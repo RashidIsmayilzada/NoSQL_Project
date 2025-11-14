@@ -6,6 +6,7 @@ A full-featured IT Help Desk / Service Desk Ticket Management System built with 
 
 - [Overview](#overview)
 - [Features](#features)
+- [Individual Features](#individual-features)
 - [Technologies](#technologies)
 - [Prerequisites](#prerequisites)
 - [Installation](#installation)
@@ -18,6 +19,7 @@ A full-featured IT Help Desk / Service Desk Ticket Management System built with 
 - [Screenshots](#screenshots)
 - [Contributing](#contributing)
 - [License](#license)
+  
 
 ## Overview
 
@@ -42,7 +44,7 @@ This project is an **Incident Management System** designed for IT service desk o
 - **Assign Tickets**: ServiceDesk can assign tickets to specific ServiceDesk employees
 - **Quick Assign**: ServiceDesk "Assign to Me" feature for fast ticket claiming
 - **Close Tickets**: ServiceDesk can mark tickets as Closed
-- **Search Tickets**: Full-text search with AND/OR operators on title and description
+- **Search Tickets**: AND/OR search across Title and Description, results ordered by most recent
 - **Ticket Attributes**:
   - **Type**: Hardware, Network, Software, Access, Other
   - **Priority**: Critical, High, Medium, Low
@@ -76,6 +78,119 @@ This project is an **Incident Management System** designed for IT service desk o
 - SMTP email sending via Gmail
 - Password reset token delivery
 - Configurable email templates
+
+  
+## Individual Features
+
+### Individual Feature — Ticket Search (Pariya Hallaji)
+
+**What it does**  
+Adds a ticket search with **AND / OR** logic that looks in **Title** and **Description**. Results show **newest first**.
+
+**How it works**  
+`TicketController.Search(q, scope)` reads the user’s role and ID, decides the scope, and calls `TicketSearchService`.  
+The service normalizes the query (spaces = **AND**, supports **OR**), matches terms (case-insensitive) against Title/Description, applies the scope filter (My or All), and sorts by Mongo `_id` descending.  
+**No new view** was needed — I reuse the existing tickets list view (`Index`) and pass `ViewBag.Query` / `ViewBag.Scope`.
+
+**Scopes**  
+- Regular user → tickets **reported by me**  
+- ServiceDesk “My” → tickets **assigned to me**  
+- ServiceDesk “All” → **all tickets**
+
+**Why this feature and this design**  
+Search is needed all the time to find the right ticket quickly. The rubric asks for AND/OR search with newest-first ordering, and a separate class. I kept the action in `TicketController` so all ticket lists stay in one place (same routes, auth, and view), and I put the logic in `TicketSearchService`.
+
+**How to search**  
+- **Fields:** matches when the **Title or Description contain** the term(s) (case-insensitive)  
+- **Operators:**  
+  - `wifi login` or `wifi AND login` → both words appear  
+  - `printer OR scanner` → either word appears
+    
+### Individual Feature — REST API Module (Rashid Ismaiylzada)
+
+**What it does**  
+Adds authenticated REST endpoints so other systems (or frontends) can access core features: dashboard stats, employees, and tickets.
+
+**How it works**  
+Implemented in `RashidApiController` with clear routes under `/api/rashid`.  
+Endpoints reuse the existing **service layer** (no duplicate logic), return consistent JSON, and apply the same **cookie-based auth** and role checks we use in MVC.
+
+**Why I chose this**  
+I wanted hands-on experience with designing and using APIs in practice. Building these endpoints helped me learn HTTP patterns while making our app easier to integrate with external tools.
+
+**Security & roles**  
+- Uses ASP.NET Core cookies: `[Authorize]` for authenticated users, `[Authorize(Roles="ServiceDesk")]` where needed  
+- Same claims and permissions as the MVC flows  
+- Input is validated via model binding and standard `ModelState` checks
+
+**Endpoints (implemented now)**  
+- `GET /api/rashid/dashboard` — current user’s dashboard data  
+- `GET /api/rashid/employees` (ServiceDesk) — list employees  
+- `POST /api/rashid/employees` (ServiceDesk) — create employee  
+- `GET /api/rashid/forgot-password` — usage info  
+- `POST /api/rashid/forgot-password` — send reset link  
+- `GET /api/rashid/login` — usage info  
+- `POST /api/rashid/login` — authenticate and issue cookie  
+- `GET /api/rashid/tickets` — tickets in scope (assigned-to-me for ServiceDesk, reported-by-me for regular user)  
+- `POST /api/rashid/tickets` — create ticket
+
+**Notes**  
+- Follows REST naming and JSON responses  
+- Keeps controllers thin; all business logic stays in services  
+- Ready to extend with PUT/DELETE if needed
+
+## Individual Feature -- Password Reset Functionality (Paulius Silkartas)
+
+For my individual functionality, I implemented the **Forgot Password and
+Reset Password** feature. This allows users to request a password reset
+link via email and securely choose a new password using a time-limited
+token.
+
+### Feature Responsibilities
+
+I developed the complete password reset workflow, including:
+
+-   *PasswordResetTokenService* -- Generates and validates secure,
+    time-limited tokens using ASP.NET Core Data Protection.
+-   *EmailSenderService* -- Sends SMTP emails with secrets loaded from
+    environment variables.
+-   *ForgotPasswordController* -- Handles the full MVC logic for
+    requesting and processing password resets.
+-   Razor views for both Forgot Password and Reset Password pages.
+
+### Design Choices
+
+I chose *ASP.NET Data Protection tokens* because: - They provide
+secure encryption, signing, and expiration handling. - No token storage
+or cleanup jobs are needed. - They integrate naturally with the MVC
+architecture and keep the system simple. - They avoid adding extra
+collections or queries in MongoDB.
+
+### Limitations
+
+Because the tokens are *stateless*, they have two important
+limitations:
+
+1.  *They remain valid until they expire* (e.g., 5 minutes).\
+2.  *They can technically be reused multiple times* within their valid
+    window, since no server-side storage tracks usage.
+
+To support single-use tokens or early invalidation, an additional
+server-side token store would be required, which was intentionally
+avoided to keep the design lightweight.
+
+### Alternative Considered (Not Used)
+
+A traditional implementation would: - Generate a random token\
+- Hash it\
+- Store it in a MongoDB collection\
+- Validate, expire, and delete it server-side
+
+This was not chosen because it would introduce: - A new collection, -
+Additional queries for validation and deletion, - TTL indexes or cleanup
+logic, - More complexity without meaningful benefit for the project's
+scope.
+
 
 ## Technologies
 
@@ -132,17 +247,15 @@ cd NoSQL_Project
 
 ### 3. Configure Environment Variables
 
-Create a `.env` file in the project root:
+Create a .env file in the project root:
 
-```env
-Mongo:ConnectionString=mongodb://localhost:27017
+env
+Mongo__ConnectionString=mongodb://localhost:27017
 # OR for MongoDB Atlas:
-# Mongo:ConnectionString=mongodb+srv://<username>:<password>@<cluster>.mongodb.net/
+# Mongo__ConnectionString=mongodb+srv://<username>:<password>@<cluster>.mongodb.net/
 
-Email:Password=your_gmail_app_password
-```
+SMTP_PASSWORD=your_gmail_app_password
 
-**Note**: For Gmail, you need to generate an [App Password](https://support.google.com/accounts/answer/185833) if 2FA is enabled.
 
 ### 4. Update appsettings.json
 
@@ -203,10 +316,10 @@ The MongoDB connection is configured in two places:
 }
 ```
 
-2. **.env file**: Connection string
-```env
-Mongo:ConnectionString=mongodb://localhost:27017
-```
+**2. *.env file***: Connection string
+env
+Mongo__ConnectionString=mongodb://localhost:27017
+
 
 ### Email Configuration
 
@@ -220,10 +333,9 @@ Email settings in **appsettings.json**:
 }
 ```
 
-Email password in **.env file**:
-```env
-Email:Password=your_app_password
-```
+Email password in *.env file*:
+env
+SMTP_PASSWORD=your_app_password
 
 ### Authentication Configuration
 
@@ -308,9 +420,11 @@ OR use **Assign to Me** for quick self-assignment
 #### Searching Tickets base on "Title" and "Description" 
 
 Use the search bar with keywords. The system supports:
-- **AND operator**: Space-separated words (e.g., "network printer" finds tickets with both words)
-- **OR operator**: Use `|` (e.g., "network|printer" finds tickets with either word)
+- **AND**: space-separated words or `AND` (e.g., `network printer` or `network AND printer`)
+- **OR**: use the keyword `OR` (e.g., `printer OR scanner`)
 - **Scope**: "My Tickets" or "All Tickets" (ServiceDesk only)
+- Matching is case-insensitive and looks in **Title** and **Description**.
+
 
 ## API Endpoints
 
