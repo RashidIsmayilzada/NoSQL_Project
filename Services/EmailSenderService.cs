@@ -18,7 +18,7 @@ namespace NoSQL_Project.Services
             var host = _config["Email:Host"];
             var port = int.Parse(_config["Email:Port"] ?? "587");
             var username = _config["Email:UserName"];
-            var password = _config["Email:Password"];
+            var password = Environment.GetEnvironmentVariable("SMTP_PASSWORD");
             var from = _config["Email:From"] ?? username;
             var enableSsl = bool.Parse(_config["Email:EnableSsl"] ?? "true");
 
