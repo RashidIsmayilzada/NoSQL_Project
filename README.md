@@ -305,7 +305,7 @@ db.Employee.insertOne({
 
 OR use **Assign to Me** for quick self-assignment
 
-#### Searching Tickets
+#### Searching Tickets base on "Title" and "Description" 
 
 Use the search bar with keywords. The system supports:
 - **AND operator**: Space-separated words (e.g., "network printer" finds tickets with both words)
