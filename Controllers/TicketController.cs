@@ -298,7 +298,7 @@ namespace NoSQL_Project.Controllers
                 // Only ServiceDesk sees the assign list
                 if (isDesk)
                 {
-                    var employees = await _employeeService.GetListAsync();
+                    var employees = await _employeeService.GetServiceDeskEmployeesAsync();
                     model.EmployeeOptions = employees.Select(e => new SelectListItem
                     {
                         Value = e.Id,
