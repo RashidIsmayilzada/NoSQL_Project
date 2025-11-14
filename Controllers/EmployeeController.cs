@@ -355,7 +355,7 @@ namespace NoSQL_Project.Controllers
                 }
 
                 _logger.LogInformation("Updating password for employee: {EmployeeId}", vm.Id);
-                bool result = await _employeeService.ChangePasswordAsync(vm);
+                bool result = await _employeeService.ChangePasswordAsync(vm.Id, vm.NewPassword, vm.ConfirmNewPassword);
                 if (!result)
                 {
                     _logger.LogWarning("Failed to update password for employee: {EmployeeId}", vm.Id);

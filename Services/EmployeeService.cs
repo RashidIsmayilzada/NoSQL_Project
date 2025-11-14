@@ -4,6 +4,7 @@ using NoSQL_Project.Services.Interfaces;
 using NoSQL_Project.Repositories.Interfaces;
 using NoSQL_Project.ViewModels.Employee;
 using NoSQL_Project.Utilities;
+using System.Diagnostics.Tracing;
 
 namespace NoSQL_Project.Services
 {
@@ -93,13 +94,13 @@ namespace NoSQL_Project.Services
         // -------------------------------
         // AUTHENTICATE
         // -------------------------------
-        public async Task<EmployeeDetailsViewModel?> AuthenticateAsync(LoginViewModel vm)
+        public async Task<EmployeeDetailsViewModel?> AuthenticateAsync(string email, string password)
         {
-            var employee = await _employeeRepository.GetEmployeeByEmail(vm.Email);
+            var employee = await _employeeRepository.GetEmployeeByEmail(email);
             if (employee == null) return null;
             if (employee.IsDisabled) return null;
 
-            if (!PasswordHelper.VerifyPassword(vm.Password, employee.PasswordHashed))
+            if (!PasswordHelper.VerifyPassword(password, employee.PasswordHashed))
                 return null;
 
             return new EmployeeDetailsViewModel
@@ -153,17 +154,17 @@ namespace NoSQL_Project.Services
         // -------------------------------
         // CHANGE PASSWORD
         // -------------------------------
-        public async Task<bool> ChangePasswordAsync(PasswordChangeViewModel vm)
+        public async Task<bool> ChangePasswordAsync(string id, string newPassword, string confirmPassword)
         {
-            if (vm.NewPassword != vm.ConfirmNewPassword)
+            if (newPassword != confirmPassword)
                 return false;
 
-            var employee = await _employeeRepository.GetEmployeeById(vm.Id);
+            var employee = await _employeeRepository.GetEmployeeById(id);
             if (employee == null) return false;
 
-            string PasswordHashed = PasswordHelper.HashPassword(vm.NewPassword);
+            string PasswordHashed = PasswordHelper.HashPassword(newPassword);
 
-            return await _employeeRepository.UpdatePassword(vm.Id, PasswordHashed);
+            return await _employeeRepository.UpdatePassword(id, PasswordHashed);
         }
 
         // -------------------------------

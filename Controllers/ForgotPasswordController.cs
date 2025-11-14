@@ -105,13 +105,7 @@ namespace NoSQL_Project.Controllers
                 return RedirectToAction("Login", "Login");
             }
 
-            if(!await _employeeService.ChangePasswordAsync(new ViewModels.Employee.PasswordChangeViewModel
-            {
-                Id = model.EmployeeId,
-                NewPassword = model.NewPassword,
-                ConfirmNewPassword = model.ConfirmPassword
-              
-            }))
+            if (!await _employeeService.ChangePasswordAsync(model.EmployeeId, model.NewPassword, model.ConfirmPassword))
             {
                 TempData["Error"] = "Could not change password.";
                 return RedirectToAction("Login", "Login");

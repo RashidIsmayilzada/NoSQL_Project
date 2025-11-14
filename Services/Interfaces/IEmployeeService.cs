@@ -13,7 +13,7 @@ namespace NoSQL_Project.Services.Interfaces
         Task<IReadOnlyList<EmployeeDetailsViewModel>> GetWithTicketsAsync();       // optional page: employees + their tickets
 
         // AUTH
-        Task<EmployeeDetailsViewModel?> AuthenticateAsync(LoginViewModel vm);      // null = bad creds
+        Task<EmployeeDetailsViewModel?> AuthenticateAsync(string email, string password);      // null = bad creds
 
         // CREATE (password is entered in the form; no auto-generation)
         Task<string> CreateAsync(EmployeeCreateViewModel vm);                      // returns new Id
@@ -22,7 +22,7 @@ namespace NoSQL_Project.Services.Interfaces
         Task<bool> UpdateProfileAsync(EmployeeDetailsViewModel vm);          // true if updated
 
         // UPDATE PASSWORD (only password)
-        Task<bool> ChangePasswordAsync(PasswordChangeViewModel vm);                // true if updated
+        Task<bool> ChangePasswordAsync(string id, string newPassword, string confrimPassword);                // true if updated
 
         // DELETE
         Task<bool> DeleteAsync(string id);

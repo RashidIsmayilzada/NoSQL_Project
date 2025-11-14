@@ -1,12 +1,7 @@
-﻿using System.Collections.Generic;
-using System.Security.Claims;
-using System.Threading.Tasks;
+﻿using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using NoSQL_Project.Models;
-using NoSQL_Project.Models.Enums;
 using NoSQL_Project.Services.Interfaces;
 using NoSQL_Project.ViewModels.Employee;
 
@@ -36,7 +31,7 @@ namespace NoSQL_Project.Controllers
             if (!ModelState.IsValid)
                 return View(loginModel);
 
-            EmployeeDetailsViewModel? employee = await _employeesService.AuthenticateAsync(loginModel);
+            EmployeeDetailsViewModel? employee = await _employeesService.AuthenticateAsync(loginModel.Email, loginModel.Password);
             if (employee == null)
             {
                 ModelState.AddModelError(string.Empty, "Incorrect email or password.");
