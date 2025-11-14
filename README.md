@@ -248,12 +248,15 @@ cd NoSQL_Project
 
 Create a .env file in the project root:
 
-env
-Mongo__ConnectionString=mongodb://localhost:27017
-# OR for MongoDB Atlas:
-# Mongo__ConnectionString=mongodb+srv://<username>:<password>@<cluster>.mongodb.net/
+### Local MongoDB
+`Mongo__ConnectionString=mongodb://localhost:27017`
 
-SMTP_PASSWORD=your_gmail_app_password
+### MongoDB Atlas example
+`Mongo__ConnectionString=mongodb+srv://<username>:<password>@<cluster>.mongodb.net/`
+
+### SMTP (Gmail App Password)
+`SMTP_PASSWORD=your_gmail_app_password`
+
 
 
 ### 4. Update appsettings.json
