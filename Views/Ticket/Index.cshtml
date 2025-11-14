@@ -115,31 +115,10 @@
 							<tr>
 								<td>@t.Title</td>
 								<td>
-									<span class="badge @(
-										t.Status switch{
-														TicketStatus.Open        => "bg-primary",
-														TicketStatus.InProgress  => "bg-info text-dark",
-														TicketStatus.OnHold      => "bg-warning text-dark",
-														TicketStatus.Resolved    => "bg-success",
-														TicketStatus.Closed      => "bg-dark",
-														_ => "bg-secondary"
-														}
-														)">
-										@t.Status
-									</span>
+									<span class="badge bg-secondary">@t.Status</span>
 								</td>
 								<td>
-									<span class="badge @(
-									t.Priority switch{
-													TicketPriority.Critical => "bg-danger",
-													TicketPriority.High     => "bg-warning text-dark",
-													TicketPriority.Medium   => "bg-info text-dark",
-													TicketPriority.Low      => "bg-secondary",
-													_ => "bg-secondary"
-													}
-														)">
-										@t.Priority
-									</span>
+									<span class="badge bg-info text-dark">@t.Priority</span>
 								</td>
 								<td>@t.Deadline</td>
 

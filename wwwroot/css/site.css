@@ -68,7 +68,7 @@ main {
 }
 
 .login-background {
-    background: url('https://images.pexels.com/photos/348689/pexels-photo-348689.jpeg?auto=compress&cs=tinysrgb&w=1000 ') center no-repeat fixed;
+    background: url('/Login-Image.png') center no-repeat fixed;
     background-size: cover;
 }
 
