@@ -2,6 +2,7 @@
 using MongoDB.Bson;
 using MongoDB.Driver;
 using NoSQL_Project.Models;
+using NoSQL_Project.Models.Enums;
 using NoSQL_Project.Repositories.Interfaces;
 
 namespace NoSQL_Project.Repositories
@@ -36,6 +37,19 @@ namespace NoSQL_Project.Repositories
 
             return await _employees.Aggregate<Employee>(pipeline).ToListAsync();
         }
+
+        public async Task<List<Employee>> GetRegularEmployees()
+        {
+            var filter = Builders<Employee>.Filter.Eq(e => e.Role, RoleType.Regular);
+            return await _employees.Find(filter).ToListAsync();
+        }
+
+        public async Task<List<Employee>> GetServiceDeskEmployees()
+        {
+            var filter = Builders<Employee>.Filter.Eq(e => e.Role, RoleType.ServiceDesk);
+            return await _employees.Find(filter).ToListAsync();
+        }
+
 
         public async Task<Employee> GetEmployeeById(string? id)
         {

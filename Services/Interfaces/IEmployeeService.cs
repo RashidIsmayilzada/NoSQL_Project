@@ -10,7 +10,9 @@ namespace NoSQL_Project.Services.Interfaces
         Task<EmployeeViewModel?> GetEmployeeAsync(string id);                 // for basic info
         Task<EmployeeViewModel?> GetEmployeeByEmailAsync(string email);                 // for basic info
         Task<EmployeeDetailsViewModel?> GetDetailsAsync(string id);                // for Details/Edit
-        Task<IReadOnlyList<EmployeeDetailsViewModel>> GetWithTicketsAsync();       // optional page: employees + their tickets
+        Task<IReadOnlyList<EmployeeDetailsViewModel>> GetWithTicketsAsync();       // employees + their tickets
+        Task<IReadOnlyList<EmployeeViewModel>> GetRegularEmployeesAsync();
+        Task<IReadOnlyList<EmployeeViewModel>> GetServiceDeskEmployeesAsync();
 
         // AUTH
         Task<EmployeeDetailsViewModel?> AuthenticateAsync(string email, string password);      // null = bad creds

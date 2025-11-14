@@ -10,6 +10,8 @@ namespace NoSQL_Project.Repositories.Interfaces
         Task<List<Employee>> GetAllEmployeesWithTickets();
         Task<Employee> GetEmployeeById(string? id);
         Task<Employee> GetEmployeeWithTicketsById(string? id);
+        Task<List<Employee>> GetRegularEmployees();
+        Task<List<Employee>> GetServiceDeskEmployees();
         Task<Employee> GetEmployeeByEmail(string email);
         Task CreateEmployee(Employee employee);
         Task UpdateEmployee(Employee employee);

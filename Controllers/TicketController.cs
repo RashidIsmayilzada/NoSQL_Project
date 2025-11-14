@@ -27,18 +27,12 @@ namespace NoSQL_Project.Controllers
             _logger = logger;
         }
 
-        // ---------- Helpers ----------
-        //private static string? ResolveAssigneeId(Ticket t)
-        //{
-        //    return string.IsNullOrWhiteSpace(t.AssignedTo) ? null : t.AssignedTo;
-        //}
-
         private async Task<string?> ResolveAssigneeNameAsync(Ticket t)
         {
             var assigneeId = t.AssignedTo;
             if (string.IsNullOrWhiteSpace(assigneeId)) return null;
 
-            var emp = await _employeeService.GetDetailsAsync(assigneeId);
+            var emp = await _employeeService.GetEmployeeAsync(assigneeId);
             return emp == null ? null : $"{emp.Name.FirstName} {emp.Name.LastName}";
         }
 
@@ -47,7 +41,7 @@ namespace NoSQL_Project.Controllers
             var reporterId = t.ReportedBy;
             if (string.IsNullOrWhiteSpace(reporterId)) return null;
 
-            var emp = await _employeeService.GetDetailsAsync(reporterId);
+            var emp = await _employeeService.GetEmployeeAsync(reporterId);
             return emp == null ? null : emp.Name.ToString();
         }
 
@@ -397,7 +391,7 @@ namespace NoSQL_Project.Controllers
         {
             try
             {
-                var employees = await _employeeService.GetListAsync();
+                var employees = await _employeeService.GetServiceDeskEmployeesAsync();
                 ViewBag.Employees = new SelectList(
                     employees.Select(e => new { e.Id, FullName = $"{e.Name.FirstName} {e.Name.LastName}" }),
                     "Id",

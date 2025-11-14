@@ -34,7 +34,7 @@ namespace NoSQL_Project.Models
         [BsonRepresentation(BsonType.ObjectId)]
         public string? ReportedBy { get; set; }
 
-        [BsonRepresentation(BsonType.String)]
+        [BsonRepresentation(BsonType.ObjectId)]
         public string? AssignedTo { get; set; }
     }
 }

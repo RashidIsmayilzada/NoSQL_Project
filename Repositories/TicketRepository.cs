@@ -16,83 +16,31 @@ public class TicketRepository : ITicketRepository
 
     public async Task<List<Ticket>> GetAllTickets()
     {
-        // Use aggregation pipeline to populate employee data WITHOUT ReportedTickets array
-        var pipeline = new[]
-        {
-            // Stage 1: Lookup ReportedBy employee (project to exclude ReportedTickets)
-            new BsonDocument("$lookup", new BsonDocument
-            {
-                { "from", "Employee" },
-                { "localField", "ReportedBy" },
-                { "foreignField", "_id" },
-                { "as", "ReportedByEmployee" },
-                { "pipeline", new BsonArray
-                    {
-                        // Project only fields we want (exclude ReportedTickets)
-                        new BsonDocument("$project", new BsonDocument
-                        {
-                            { "_id", 1 },
-                            { "EmployeeId", 1 },
-                            { "Name", 1 },
-                            { "Role", 1 },
-                            { "contactInfo", 1 }
-                            // ReportedTickets array NOT included - prevents infinite loop
-                        })
-                    }
-                }
-            }),
-            // Stage 2: Convert array to single object
-            new BsonDocument("$unwind", new BsonDocument
-            {
-                { "path", "$ReportedByEmployee" },
-                { "preserveNullAndEmptyArrays", true }
-            })
-        };
+        var filter = Builders<Ticket>.Filter.Empty;
 
-        return await _tickets.Aggregate<Ticket>(pipeline).ToListAsync();
+        var tickets = await _tickets
+            .Find(filter)
+            .SortByDescending(t => t.TicketId)
+            .ToListAsync();
+
+        return tickets;
     }
-    
+
     public async Task<Ticket> GetTicketById(string id)
     {
-        // Use aggregation pipeline for single ticket
-        var pipeline = new[]
-        {
-            // Match specific ticket
-            new BsonDocument("$match", new BsonDocument
-            {
-                { "_id", new ObjectId(id) }
-            }),
-            // Lookup ReportedBy employee
-            new BsonDocument("$lookup", new BsonDocument
-            {
-                { "from", "Employee" },
-                { "localField", "ReportedBy" },
-                { "foreignField", "_id" },
-                { "as", "ReportedByEmployee" },
-                { "pipeline", new BsonArray
-                    {
-                        new BsonDocument("$project", new BsonDocument
-                        {
-                            { "_id", 1 },
-                            { "EmployeeId", 1 },
-                            { "Name", 1 },
-                            { "Role", 1 },
-                            { "contactInfo", 1 }
-                        })
-                    }
-                }
-            }),
-            // Convert array to single object
-            new BsonDocument("$unwind", new BsonDocument
-            {
-                { "path", "$ReportedByEmployee" },
-                { "preserveNullAndEmptyArrays", true }
-            })
-        };
+        if (!ObjectId.TryParse(id, out var objectId))
+            throw new ArgumentException("Invalid ObjectId format", nameof(id));
 
-        return await _tickets.Aggregate<Ticket>(pipeline).FirstOrDefaultAsync();
+        var filter = Builders<Ticket>.Filter.Eq("_id", objectId);
+        var ticket = await _tickets.Find(filter).FirstOrDefaultAsync();
+
+        if (ticket == null)
+            throw new KeyNotFoundException($"Ticket with id {id} not found.");
+
+        return ticket;
     }
-    
+
+
     public async Task CreateTicket(Ticket ticket)
     {
         await _tickets.InsertOneAsync(ticket);

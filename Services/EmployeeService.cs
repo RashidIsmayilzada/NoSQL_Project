@@ -92,6 +92,38 @@ namespace NoSQL_Project.Services
         }
 
         // -------------------------------
+        // READ: Only Regular employees
+        // -------------------------------
+        public async Task<IReadOnlyList<EmployeeViewModel>> GetRegularEmployeesAsync()
+        {
+            var employees = await _employeeRepository.GetRegularEmployees();
+
+            return employees.Select(e => new EmployeeViewModel
+            {
+                Id = e.Id ?? "",
+                IsDisabled = e.IsDisabled,
+                Name = e.Name,
+                Role = e.Role
+            }).ToList();
+        }
+
+        // -------------------------------
+        // READ: Only ServiceDesk employees
+        // -------------------------------
+        public async Task<IReadOnlyList<EmployeeViewModel>> GetServiceDeskEmployeesAsync()
+        {
+            var employees = await _employeeRepository.GetServiceDeskEmployees();
+
+            return employees.Select(e => new EmployeeViewModel
+            {
+                Id = e.Id ?? "",
+                IsDisabled = e.IsDisabled,
+                Name = e.Name,
+                Role = e.Role
+            }).ToList();
+        }
+
+        // -------------------------------
         // AUTHENTICATE
         // -------------------------------
         public async Task<EmployeeDetailsViewModel?> AuthenticateAsync(string email, string password)
