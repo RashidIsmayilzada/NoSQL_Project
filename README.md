@@ -16,7 +16,6 @@ A full-featured IT Help Desk / Service Desk Ticket Management System built with 
 - [Usage](#usage)
 - [API Endpoints](#api-endpoints)
 - [Authentication & Authorization](#authentication--authorization)
-- [Screenshots](#screenshots)
 - [Contributing](#contributing)
 - [License](#license)
   
@@ -542,17 +541,6 @@ new Claim(ClaimTypes.Email, employee.ContactInfo.Email)
 - **Session Timeout**: 120 minutes (sliding)
 - **Session Storage**: In-memory (can be configured for distributed cache)
 - **Auto Logout**: After timeout or manual logout
-
-## Screenshots
-
-### Dashboard
-The dashboard provides an overview of ticket statistics with a donut chart visualization showing status breakdown.
-
-### Ticket Management
-Create, view, edit, and assign tickets with a clean and intuitive interface.
-
-### Employee Management
-ServiceDesk users can manage employee profiles, view ticket counts, and control account status.
 
 ## Contributing
 
