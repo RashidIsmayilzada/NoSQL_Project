@@ -2,7 +2,7 @@
 {
     public enum DashboardScope
     {
-        MyTickets,   // برای کارمند عادی
-        AllTickets   // برای کارمند ServiceDesk
+        MyTickets,   // for regular employee
+        AllTickets   //for ServiceDesk employee
     }
 }
